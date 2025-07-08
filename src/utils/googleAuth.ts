@@ -18,18 +18,6 @@ class GoogleAuthService {
   }
 
   async signIn(): Promise<{ user: GoogleUser; accessToken: string } | null> {
-    // Use Electron OAuth2 if available, otherwise fallback to web OAuth
-    if (this.isElectron()) {
-      try {
-        const result = await electronAuthService.signIn();
-        return result;
-      } catch (error) {
-        console.warn('Electron OAuth failed, falling back to web OAuth:', error);
-        // Continue to web OAuth fallback
-      }
-    }
-
-    // Web OAuth fallback
     return await electronAuthService.signIn();
   }
 
