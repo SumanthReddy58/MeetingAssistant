@@ -20,14 +20,8 @@ class GoogleAuthService {
 
   async signIn(): Promise<{ user: GoogleUser; accessToken: string } | null> {
     if (!this.CLIENT_ID) {
-      const errorMessage = 'Google Client ID not configured. Please:\n1. Create a .env file in your project root\n2. Add VITE_GOOGLE_CLIENT_ID=your_client_id\n3. Get your Client ID from Google Cloud Console\n4. Restart the development server';
-      console.error(errorMessage);
-      throw new Error(errorMessage);
+      throw new Error('Google Client ID not configured. Please set VITE_GOOGLE_CLIENT_ID in your environment variables.');
     }
-
-    console.log('Starting Google sign-in process...');
-    console.log('Environment:', this.isElectron() ? 'Electron' : 'Web');
-    console.log('Client ID configured:', !!this.CLIENT_ID);
 
     if (this.isElectron()) {
       return this.electronOAuth();
@@ -38,8 +32,6 @@ class GoogleAuthService {
 
   private async electronOAuth(): Promise<{ user: GoogleUser; accessToken: string } | null> {
     try {
-      console.log('Attempting Electron OAuth...');
-      
       // Import electron-oauth2 dynamically to avoid issues in browser
       const { default: electronOauth2 } = await import('electron-oauth2');
       
@@ -72,7 +64,6 @@ class GoogleAuthService {
         oauth2.getAccessToken({})
           .then(async (token: any) => {
             try {
-              console.log('Electron OAuth token received');
               const user = await this.getUserInfo(token.access_token);
               
               // Store token with expiry
@@ -81,37 +72,25 @@ class GoogleAuthService {
               localStorage.setItem('google_token_expiry', expiryTime.toString());
               localStorage.setItem('google_user', JSON.stringify(user));
 
-              console.log('User authenticated successfully:', user.email);
               resolve({
                 user,
                 accessToken: token.access_token
               });
             } catch (error) {
-              console.error('Failed to get user info:', error);
               reject(error);
             }
           })
           .catch((error) => {
-            console.error('Electron OAuth error:', error);
             reject(error);
           });
       });
     } catch (error) {
-      console.error('Electron OAuth failed:', error);
       // Fallback to web OAuth if Electron OAuth fails
-      console.log('Falling back to web OAuth...');
       return this.webOAuth();
     }
   }
 
   private async webOAuth(): Promise<{ user: GoogleUser; accessToken: string } | null> {
-    console.log('Starting web OAuth flow...');
-    
-    if (!this.CLIENT_ID) {
-      console.error('Cannot start OAuth: Client ID not configured');
-      throw new Error('Google Client ID not configured');
-    }
-    
     // Store the current path to redirect back after auth
     sessionStorage.setItem('auth_redirect_path', window.location.pathname);
 
@@ -124,10 +103,6 @@ class GoogleAuthService {
     authUrl.searchParams.set('include_granted_scopes', 'true');
     authUrl.searchParams.set('state', Date.now().toString());
 
-    console.log('OAuth URL created successfully');
-    console.log('Redirect URI:', window.location.origin);
-    console.log('Client ID (first 10 chars):', this.CLIENT_ID.substring(0, 10) + '...');
-
     // Redirect to Google OAuth
     window.location.href = authUrl.toString();
     
@@ -135,8 +110,6 @@ class GoogleAuthService {
   }
 
   private async getUserInfo(accessToken: string): Promise<GoogleUser> {
-    console.log('Fetching user info...');
-    
     const response = await fetch('https://www.googleapis.com/oauth2/v2/userinfo', {
       method: 'GET',
       headers: {
@@ -147,12 +120,10 @@ class GoogleAuthService {
 
     if (!response.ok) {
       const errorText = await response.text();
-      console.error('Failed to get user info:', response.status, errorText);
       throw new Error(`Failed to get user info: ${response.status} ${response.statusText}`);
     }
 
     const user = await response.json();
-    console.log('User info received:', { email: user.email, name: user.name });
     return user;
   }
 
@@ -162,32 +133,25 @@ class GoogleAuthService {
     const userStr = localStorage.getItem('google_user');
 
     if (!accessToken || !tokenExpiry || !userStr) {
-      console.log('No stored authentication found');
       return null;
     }
 
     // Check if token is expired
     if (Date.now() >= parseInt(tokenExpiry)) {
-      console.log('Stored token has expired');
       this.signOut();
       return null;
     }
 
     try {
       const user = JSON.parse(userStr);
-      console.log('Found valid stored authentication for:', user.email);
       return { user, accessToken };
     } catch (error) {
-      console.error('Failed to parse stored user data:', error);
       this.signOut();
       return null;
     }
   }
 
   async handleOAuthCallback(): Promise<{ user: GoogleUser; accessToken: string } | null> {
-    console.log('Handling OAuth callback...');
-    console.log('Current URL:', window.location.href);
-    
     const hashParams = new URLSearchParams(window.location.hash.substring(1));
     const accessToken = hashParams.get('access_token');
     const expiresIn = hashParams.get('expires_in');
@@ -196,13 +160,11 @@ class GoogleAuthService {
 
     if (error) {
       const errorMessage = `OAuth error: ${error}${errorDescription ? ` - ${errorDescription}` : ''}`;
-      console.error(errorMessage);
       throw new Error(errorMessage);
     }
 
     if (accessToken && expiresIn) {
       try {
-        console.log('Processing OAuth callback with access token');
         const user = await this.getUserInfo(accessToken);
         
         // Store token with expiry
@@ -211,21 +173,19 @@ class GoogleAuthService {
         localStorage.setItem('google_token_expiry', expiryTime.toString());
         localStorage.setItem('google_user', JSON.stringify(user));
 
-        console.log('OAuth callback processed successfully');
+        // Clean up URL
+        window.history.replaceState({}, document.title, window.location.pathname);
 
         return { user, accessToken };
       } catch (error) {
-        console.error('Failed to process OAuth callback:', error);
         throw error;
       }
     }
 
-    console.log('No access token found in OAuth callback');
     return null;
   }
 
   signOut(): void {
-    console.log('Signing out user...');
     localStorage.removeItem('google_access_token');
     localStorage.removeItem('google_token_expiry');
     localStorage.removeItem('google_user');
@@ -247,7 +207,6 @@ class GoogleAuthService {
 
       return response.ok;
     } catch (error) {
-      console.error('Token validation failed:', error);
       return false;
     }
   }
