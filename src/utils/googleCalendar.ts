@@ -21,22 +21,27 @@ interface CalendarEvent {
 class GoogleCalendarService {
   private accessToken: string | null = null;
   private isInitialized = false;
+  private readonly API_BASE = 'https://www.googleapis.com/calendar/v3';
 
   async initialize(accessToken: string) {
     try {
-      // Validate the token by making a test request
-      const response = await fetch('https://www.googleapis.com/calendar/v3/calendars/primary', {
+      // Validate the token by making a test request to the correct endpoint
+      const response = await fetch(`${this.API_BASE}/calendars/primary`, {
+        method: 'GET',
         headers: {
           'Authorization': `Bearer ${accessToken}`,
+          'Accept': 'application/json',
         },
       });
 
       if (response.ok) {
         this.accessToken = accessToken;
         this.isInitialized = true;
+        console.log('Google Calendar initialized successfully');
         return true;
       } else {
-        console.error('Token validation failed:', response.status, response.statusText);
+        const errorData = await response.json().catch(() => ({}));
+        console.error('Token validation failed:', response.status, response.statusText, errorData);
         return false;
       }
     } catch (error) {
@@ -52,6 +57,7 @@ class GoogleCalendarService {
     return {
       'Authorization': `Bearer ${this.accessToken}`,
       'Content-Type': 'application/json',
+      'Accept': 'application/json',
     };
   }
 
@@ -61,7 +67,9 @@ class GoogleCalendarService {
     }
 
     try {
-      const response = await fetch('https://www.googleapis.com/calendar/v3/calendars/primary/events', {
+      console.log('Creating calendar event:', event);
+      
+      const response = await fetch(`${this.API_BASE}/calendars/primary/events`, {
         method: 'POST',
         headers: this.getHeaders(),
         body: JSON.stringify(event),
@@ -69,10 +77,12 @@ class GoogleCalendarService {
 
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({}));
-        throw new Error(`HTTP ${response.status}: ${errorData.error?.message || response.statusText}`);
+        console.error('Create event failed:', response.status, response.statusText, errorData);
+        throw new Error(`Failed to create event: ${response.status} ${errorData.error?.message || response.statusText}`);
       }
 
       const data = await response.json();
+      console.log('Event created successfully:', data.id);
       return data.id;
     } catch (error) {
       console.error('Failed to create calendar event:', error);
@@ -86,7 +96,7 @@ class GoogleCalendarService {
     }
 
     try {
-      const response = await fetch(`https://www.googleapis.com/calendar/v3/calendars/primary/events/${eventId}`, {
+      const response = await fetch(`${this.API_BASE}/calendars/primary/events/${eventId}`, {
         method: 'PATCH',
         headers: this.getHeaders(),
         body: JSON.stringify(event),
@@ -94,7 +104,8 @@ class GoogleCalendarService {
 
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({}));
-        throw new Error(`HTTP ${response.status}: ${errorData.error?.message || response.statusText}`);
+        console.error('Update event failed:', response.status, response.statusText, errorData);
+        return false;
       }
 
       return true;
@@ -110,14 +121,14 @@ class GoogleCalendarService {
     }
 
     try {
-      const response = await fetch(`https://www.googleapis.com/calendar/v3/calendars/primary/events/${eventId}`, {
+      const response = await fetch(`${this.API_BASE}/calendars/primary/events/${eventId}`, {
         method: 'DELETE',
         headers: this.getHeaders(),
       });
 
-      if (!response.ok) {
+      if (!response.ok && response.status !== 404) {
         const errorData = await response.json().catch(() => ({}));
-        console.error('Failed to delete calendar event:', errorData);
+        console.error('Delete event failed:', response.status, response.statusText, errorData);
         return false;
       }
 
@@ -135,16 +146,17 @@ class GoogleCalendarService {
 
     try {
       const now = new Date().toISOString();
-      const response = await fetch(
-        `https://www.googleapis.com/calendar/v3/calendars/primary/events?timeMin=${now}&maxResults=${maxResults}&singleEvents=true&orderBy=startTime`,
-        {
-          headers: this.getHeaders(),
-        }
-      );
+      const url = `${this.API_BASE}/calendars/primary/events?timeMin=${encodeURIComponent(now)}&maxResults=${maxResults}&singleEvents=true&orderBy=startTime`;
+      
+      const response = await fetch(url, {
+        method: 'GET',
+        headers: this.getHeaders(),
+      });
 
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({}));
-        throw new Error(`HTTP ${response.status}: ${errorData.error?.message || response.statusText}`);
+        console.error('List events failed:', response.status, response.statusText, errorData);
+        throw new Error(`Failed to list events: ${response.status} ${errorData.error?.message || response.statusText}`);
       }
 
       const data = await response.json();
@@ -152,6 +164,38 @@ class GoogleCalendarService {
     } catch (error) {
       console.error('Failed to list calendar events:', error);
       throw error;
+    }
+  }
+
+  async testConnection(): Promise<{ success: boolean; message: string }> {
+    if (!this.isInitialized || !this.accessToken) {
+      return { success: false, message: 'Not initialized' };
+    }
+
+    try {
+      const response = await fetch(`${this.API_BASE}/calendars/primary`, {
+        method: 'GET',
+        headers: this.getHeaders(),
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        return { 
+          success: true, 
+          message: `Connected to calendar: ${data.summary || 'Primary Calendar'}` 
+        };
+      } else {
+        const errorData = await response.json().catch(() => ({}));
+        return { 
+          success: false, 
+          message: `Connection failed: ${response.status} ${errorData.error?.message || response.statusText}` 
+        };
+      }
+    } catch (error) {
+      return { 
+        success: false, 
+        message: `Connection error: ${error instanceof Error ? error.message : 'Unknown error'}` 
+      };
     }
   }
 }
