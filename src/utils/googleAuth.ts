@@ -19,68 +19,22 @@ class GoogleAuthService {
       throw new Error('Google Client ID not configured. Please set VITE_GOOGLE_CLIENT_ID in your environment variables.');
     }
 
-    return new Promise((resolve, reject) => {
-      // Create auth URL
-      const authUrl = new URL('https://accounts.google.com/oauth/authorize');
-      authUrl.searchParams.set('client_id', this.CLIENT_ID);
-      authUrl.searchParams.set('redirect_uri', this.REDIRECT_URI);
-      authUrl.searchParams.set('scope', this.SCOPE);
-      authUrl.searchParams.set('response_type', 'token');
-      authUrl.searchParams.set('include_granted_scopes', 'true');
-      authUrl.searchParams.set('state', Date.now().toString());
+    // Store the current path to redirect back after auth
+    sessionStorage.setItem('auth_redirect_path', window.location.pathname);
 
-      // Open popup window
-      const popup = window.open(
-        authUrl.toString(),
-        'google-auth',
-        'width=500,height=600,scrollbars=yes,resizable=yes'
-      );
+    // Create auth URL for redirect flow
+    const authUrl = new URL('https://accounts.google.com/oauth/authorize');
+    authUrl.searchParams.set('client_id', this.CLIENT_ID);
+    authUrl.searchParams.set('redirect_uri', this.REDIRECT_URI);
+    authUrl.searchParams.set('scope', this.SCOPE);
+    authUrl.searchParams.set('response_type', 'token');
+    authUrl.searchParams.set('include_granted_scopes', 'true');
+    authUrl.searchParams.set('state', Date.now().toString());
 
-      if (!popup) {
-        reject(new Error('Popup blocked. Please allow popups for this site.'));
-        return;
-      }
-
-      // Listen for popup messages
-      const messageListener = async (event: MessageEvent) => {
-        if (event.origin !== window.location.origin) return;
-
-        if (event.data.type === 'GOOGLE_AUTH_SUCCESS') {
-          window.removeEventListener('message', messageListener);
-          popup.close();
-
-          try {
-            const { accessToken, expiresIn } = event.data;
-            const user = await this.getUserInfo(accessToken);
-            
-            // Store token with expiry
-            const expiryTime = Date.now() + (expiresIn * 1000);
-            localStorage.setItem('google_access_token', accessToken);
-            localStorage.setItem('google_token_expiry', expiryTime.toString());
-            localStorage.setItem('google_user', JSON.stringify(user));
-
-            resolve({ user, accessToken });
-          } catch (error) {
-            reject(error);
-          }
-        } else if (event.data.type === 'GOOGLE_AUTH_ERROR') {
-          window.removeEventListener('message', messageListener);
-          popup.close();
-          reject(new Error(event.data.error));
-        }
-      };
-
-      window.addEventListener('message', messageListener);
-
-      // Check if popup was closed manually
-      const checkClosed = setInterval(() => {
-        if (popup.closed) {
-          clearInterval(checkClosed);
-          window.removeEventListener('message', messageListener);
-          resolve(null);
-        }
-      }, 1000);
-    });
+    // Redirect to Google OAuth
+    window.location.href = authUrl.toString();
+    
+    return null; // This won't return since we're redirecting
   }
 
   async getUserInfo(accessToken: string): Promise<GoogleUser> {
@@ -121,37 +75,47 @@ class GoogleAuthService {
     }
   }
 
-  signOut(): void {
-    localStorage.removeItem('google_access_token');
-    localStorage.removeItem('google_token_expiry');
-    localStorage.removeItem('google_user');
-  }
-
-  // Handle OAuth callback in popup
-  handleOAuthCallback(): void {
+  async handleOAuthCallback(): Promise<{ user: GoogleUser; accessToken: string } | null> {
     const hashParams = new URLSearchParams(window.location.hash.substring(1));
     const accessToken = hashParams.get('access_token');
     const expiresIn = hashParams.get('expires_in');
     const error = hashParams.get('error');
 
     if (error) {
-      window.opener?.postMessage({
-        type: 'GOOGLE_AUTH_ERROR',
-        error: error
-      }, window.location.origin);
-    } else if (accessToken && expiresIn) {
-      window.opener?.postMessage({
-        type: 'GOOGLE_AUTH_SUCCESS',
-        accessToken,
-        expiresIn: parseInt(expiresIn)
-      }, window.location.origin);
+      throw new Error(`OAuth error: ${error}`);
     }
+
+    if (accessToken && expiresIn) {
+      try {
+        const user = await this.getUserInfo(accessToken);
+        
+        // Store token with expiry
+        const expiryTime = Date.now() + (parseInt(expiresIn) * 1000);
+        localStorage.setItem('google_access_token', accessToken);
+        localStorage.setItem('google_token_expiry', expiryTime.toString());
+        localStorage.setItem('google_user', JSON.stringify(user));
+
+        // Clean up URL
+        const redirectPath = sessionStorage.getItem('auth_redirect_path') || '/';
+        sessionStorage.removeItem('auth_redirect_path');
+        window.history.replaceState({}, document.title, redirectPath);
+
+        return { user, accessToken };
+      } catch (error) {
+        console.error('Failed to get user info:', error);
+        throw error;
+      }
+    }
+
+    return null;
+  }
+
+  signOut(): void {
+    localStorage.removeItem('google_access_token');
+    localStorage.removeItem('google_token_expiry');
+    localStorage.removeItem('google_user');
+    sessionStorage.removeItem('auth_redirect_path');
   }
 }
 
 export const googleAuthService = new GoogleAuthService();
-
-// Auto-handle OAuth callback if we're in a popup
-if (window.opener && window.location.hash.includes('access_token')) {
-  googleAuthService.handleOAuthCallback();
-}

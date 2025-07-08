@@ -11,28 +11,45 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ onLogin }) => {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  // Check for OAuth callback on component mount
+  useEffect(() => {
+    const handleCallback = async () => {
+      if (window.location.hash.includes('access_token')) {
+        setIsLoading(true);
+        try {
+          const result = await googleAuthService.handleOAuthCallback();
+          if (result) {
+            const user: User = {
+              id: result.user.id,
+              email: result.user.email,
+              name: result.user.name,
+              picture: result.user.picture,
+              accessToken: result.accessToken
+            };
+            onLogin(user);
+          }
+        } catch (error) {
+          const errorMessage = error instanceof Error ? error.message : 'Authentication failed';
+          setError(errorMessage);
+        } finally {
+          setIsLoading(false);
+        }
+      }
+    };
+
+    handleCallback();
+  }, [onLogin]);
+
   const handleGoogleSignIn = async () => {
     setIsLoading(true);
     setError(null);
 
     try {
-      const result = await googleAuthService.signIn();
-      
-      if (result) {
-        const user: User = {
-          id: result.user.id,
-          email: result.user.email,
-          name: result.user.name,
-          picture: result.user.picture,
-          accessToken: result.accessToken
-        };
-        
-        onLogin(user);
-      }
+      await googleAuthService.signIn();
+      // The page will redirect, so we don't need to handle the result here
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Failed to sign in with Google';
       setError(errorMessage);
-    } finally {
       setIsLoading(false);
     }
   };

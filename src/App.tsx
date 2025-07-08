@@ -35,6 +35,28 @@ function App() {
   useEffect(() => {
     const checkAuth = async () => {
       try {
+        // First check if we're handling an OAuth callback
+        if (window.location.hash.includes('access_token')) {
+          const result = await googleAuthService.handleOAuthCallback();
+          if (result) {
+            const userData: User = {
+              id: result.user.id,
+              email: result.user.email,
+              name: result.user.name,
+              picture: result.user.picture,
+              accessToken: result.accessToken
+            };
+            setUser(userData);
+            
+            // Initialize calendar service with the new token
+            const success = await googleCalendarService.initialize(result.accessToken);
+            setIsCalendarConnected(success);
+            setIsCheckingAuth(false);
+            return;
+          }
+        }
+
+        // Check for existing stored authentication
         const currentUser = await googleAuthService.getCurrentUser();
         if (currentUser) {
           const userData: User = {
