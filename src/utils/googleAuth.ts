@@ -20,7 +20,9 @@ class GoogleAuthService {
 
   async signIn(): Promise<{ user: GoogleUser; accessToken: string } | null> {
     if (!this.CLIENT_ID) {
-      throw new Error('Google Client ID not configured. Please set VITE_GOOGLE_CLIENT_ID in your environment variables.');
+      const errorMessage = 'Google Client ID not configured. Please:\n1. Create a .env file in your project root\n2. Add VITE_GOOGLE_CLIENT_ID=your_client_id\n3. Get your Client ID from Google Cloud Console\n4. Restart the development server';
+      console.error(errorMessage);
+      throw new Error(errorMessage);
     }
 
     console.log('Starting Google sign-in process...');
@@ -105,6 +107,11 @@ class GoogleAuthService {
   private async webOAuth(): Promise<{ user: GoogleUser; accessToken: string } | null> {
     console.log('Starting web OAuth flow...');
     
+    if (!this.CLIENT_ID) {
+      console.error('Cannot start OAuth: Client ID not configured');
+      throw new Error('Google Client ID not configured');
+    }
+    
     // Store the current path to redirect back after auth
     sessionStorage.setItem('auth_redirect_path', window.location.pathname);
 
@@ -117,7 +124,9 @@ class GoogleAuthService {
     authUrl.searchParams.set('include_granted_scopes', 'true');
     authUrl.searchParams.set('state', Date.now().toString());
 
-    console.log('Redirecting to:', authUrl.toString());
+    console.log('OAuth URL created successfully');
+    console.log('Redirect URI:', window.location.origin);
+    console.log('Client ID (first 10 chars):', this.CLIENT_ID.substring(0, 10) + '...');
 
     // Redirect to Google OAuth
     window.location.href = authUrl.toString();

@@ -22,6 +22,13 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ onLogin }) => {
     setDebugInfo(prev => [...prev.slice(-4), `${new Date().toLocaleTimeString()}: ${message}`]);
   };
 
+  // Add environment debug info on mount
+  useEffect(() => {
+    addDebugInfo(`Environment check - Client ID: ${CLIENT_ID ? 'Configured' : 'Missing'}`);
+    addDebugInfo(`Current origin: ${window.location.origin}`);
+    addDebugInfo(`Is Electron: ${isElectron}`);
+  }, []);
+
   // Check for OAuth callback on component mount
   useEffect(() => {
     const handleCallback = async () => {
@@ -168,9 +175,14 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ onLogin }) => {
                     Google Client ID not configured
                   </p>
                   <div className="text-xs text-yellow-700 dark:text-yellow-300 space-y-1">
-                    <p>1. Create a <code className="bg-yellow-100 dark:bg-yellow-800 px-1 rounded">.env</code> file in your project root</p>
-                    <p>2. Add: <code className="bg-yellow-100 dark:bg-yellow-800 px-1 rounded">VITE_GOOGLE_CLIENT_ID=your_client_id</code></p>
-                    <p>3. Get your Client ID from <a href="https://console.cloud.google.com/" target="_blank" rel="noopener noreferrer" className="underline">Google Cloud Console</a></p>
+                    <p><strong>Step 1:</strong> Go to <a href="https://console.cloud.google.com/" target="_blank" rel="noopener noreferrer" className="underline text-blue-600 dark:text-blue-400">Google Cloud Console</a></p>
+                    <p><strong>Step 2:</strong> Create a new project or select existing</p>
+                    <p><strong>Step 3:</strong> Enable "Google Calendar API"</p>
+                    <p><strong>Step 4:</strong> Go to "Credentials" → "Create Credentials" → "OAuth 2.0 Client IDs"</p>
+                    <p><strong>Step 5:</strong> Choose "Web application"</p>
+                    <p><strong>Step 6:</strong> Add <code className="bg-yellow-100 dark:bg-yellow-800 px-1 rounded">{window.location.origin}</code> to "Authorized JavaScript origins"</p>
+                    <p><strong>Step 7:</strong> Copy Client ID to your <code className="bg-yellow-100 dark:bg-yellow-800 px-1 rounded">.env</code> file</p>
+                    <p><strong>Step 8:</strong> Restart the dev server</p>
                   </div>
                 </div>
               )}
@@ -226,7 +238,11 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ onLogin }) => {
             <button
               onClick={handleGoogleSignIn}
               disabled={isLoading || !CLIENT_ID}
-              className="w-full flex items-center justify-center space-x-3 bg-white dark:bg-gray-700 border-2 border-gray-300 dark:border-gray-600 rounded-lg px-6 py-3 text-gray-700 dark:text-gray-300 font-medium hover:bg-gray-50 dark:hover:bg-gray-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              className={`w-full flex items-center justify-center space-x-3 rounded-lg px-6 py-3 font-medium transition-colors ${
+                !CLIENT_ID 
+                  ? 'bg-gray-300 dark:bg-gray-600 text-gray-500 dark:text-gray-400 cursor-not-allowed'
+                  : 'bg-white dark:bg-gray-700 border-2 border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-600 disabled:opacity-50 disabled:cursor-not-allowed'
+              }`}
             >
               {isLoading ? (
                 <>
@@ -243,7 +259,7 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ onLogin }) => {
                     <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/>
                     <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
                   </svg>
-                  <span>Continue with Google</span>
+                  <span>{!CLIENT_ID ? 'Setup Required' : 'Continue with Google'}</span>
                 </>
               )}
             </button>
