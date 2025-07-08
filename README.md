@@ -7,6 +7,7 @@ A modern meeting assistant application with voice recognition, real-time transcr
 - **Voice Recognition**: Real-time speech-to-text transcription
 - **Action Item Extraction**: Automatically identifies and extracts action items from conversations
 - **Google Calendar Integration**: Creates calendar events for scheduled action items
+- **Electron OAuth2**: Secure authentication without popup blockers (when running as desktop app)
 - **Session Management**: Save and manage multiple meeting sessions
 - **Export Functionality**: Export transcripts and action items
 - **Dark/Light Theme**: Toggle between themes
@@ -18,6 +19,7 @@ A modern meeting assistant application with voice recognition, real-time transcr
 
 - Node.js 18+ 
 - A Google Cloud Platform account for Calendar integration
+- (Optional) Electron for desktop app functionality
 
 ### Installation
 
@@ -39,6 +41,26 @@ A modern meeting assistant application with voice recognition, real-time transcr
    ```bash
    npm run dev
    ```
+
+### Running as Desktop App
+
+For enhanced security and to avoid popup blockers, you can run the app as an Electron desktop application:
+
+1. **Development mode**:
+   ```bash
+   npm run electron-dev
+   ```
+
+2. **Build desktop app**:
+   ```bash
+   npm run electron-build
+   ```
+
+The desktop version provides:
+- Secure OAuth2 authentication without popup blockers
+- Native window management
+- Better integration with system notifications
+- Offline capability for stored sessions
 
 ### Google Calendar Setup
 
@@ -75,6 +97,7 @@ Make sure to set your environment variables in your deployment platform.
 
 ## Usage
 
+### Web Version
 1. **Start a Session**: Click "New Session" to begin
 2. **Record Audio**: Click the microphone button to start voice recognition
 3. **View Transcript**: See real-time transcription in the main panel
@@ -82,20 +105,33 @@ Make sure to set your environment variables in your deployment platform.
 5. **Connect Calendar**: Link your Google Calendar for automatic event creation
 6. **Export Data**: Download transcripts and action items as files
 
+### Desktop Version
+The desktop app provides the same functionality with enhanced security:
+- OAuth2 authentication opens in a secure native window
+- No browser popup blockers to worry about
+- Better performance and system integration
+
 ## Technology Stack
 
 - **Frontend**: React 18, TypeScript, Tailwind CSS
 - **Voice Recognition**: Web Speech API
+- **Desktop**: Electron with OAuth2 integration
 - **Icons**: Lucide React
 - **Build Tool**: Vite
 - **Deployment**: Netlify
 
 ## Browser Support
 
+### Web Version
 - Chrome (recommended for voice recognition)
 - Edge
 - Safari (limited voice recognition support)
 - Firefox (limited voice recognition support)
+
+### Desktop Version
+- Windows 10/11
+- macOS 10.14+
+- Linux (Ubuntu 18.04+, Fedora 32+, Debian 10+)
 
 ## Contributing
 
