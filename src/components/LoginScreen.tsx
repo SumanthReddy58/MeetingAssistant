@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { FileText, Calendar, Mic, CheckCircle, ExternalLink } from 'lucide-react';
+import { FileText, Calendar, Mic, CheckCircle, ExternalLink, AlertTriangle } from 'lucide-react';
 import { googleAuthService } from '../utils/googleAuth';
 import { User } from '../types';
 
@@ -10,19 +10,28 @@ interface LoginScreenProps {
 export const LoginScreen: React.FC<LoginScreenProps> = ({ onLogin }) => {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [authMethod, setAuthMethod] = useState<'auto' | 'electron' | 'web'>('auto');
+  const [debugInfo, setDebugInfo] = useState<string[]>([]);
 
   // Check if running in Electron
   const isElectron = typeof window !== 'undefined' && window.process && window.process.type === 'renderer';
+  const CLIENT_ID = import.meta.env.VITE_GOOGLE_CLIENT_ID;
+
+  // Add debug logging
+  const addDebugInfo = (message: string) => {
+    console.log(message);
+    setDebugInfo(prev => [...prev.slice(-4), `${new Date().toLocaleTimeString()}: ${message}`]);
+  };
 
   // Check for OAuth callback on component mount
   useEffect(() => {
     const handleCallback = async () => {
       if (window.location.hash.includes('access_token')) {
+        addDebugInfo('OAuth callback detected');
         setIsLoading(true);
         try {
           const result = await googleAuthService.handleOAuthCallback();
           if (result) {
+            addDebugInfo(`Authentication successful for ${result.user.email}`);
             const user: User = {
               id: result.user.id,
               email: result.user.email,
@@ -31,13 +40,23 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ onLogin }) => {
               accessToken: result.accessToken
             };
             onLogin(user);
+          } else {
+            addDebugInfo('OAuth callback processed but no result returned');
           }
         } catch (error) {
           const errorMessage = error instanceof Error ? error.message : 'Authentication failed';
+          addDebugInfo(`Authentication error: ${errorMessage}`);
           setError(errorMessage);
         } finally {
           setIsLoading(false);
         }
+      } else if (window.location.hash.includes('error')) {
+        const hashParams = new URLSearchParams(window.location.hash.substring(1));
+        const error = hashParams.get('error');
+        const errorDescription = hashParams.get('error_description');
+        const errorMessage = `OAuth error: ${error}${errorDescription ? ` - ${errorDescription}` : ''}`;
+        addDebugInfo(errorMessage);
+        setError(errorMessage);
       }
     };
 
@@ -48,19 +67,39 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ onLogin }) => {
     setIsLoading(true);
     setError(null);
     
-    console.log(`Attempting authentication using ${isElectron ? 'Electron OAuth2' : 'Web OAuth'} method...`);
+    addDebugInfo(`Starting authentication (${isElectron ? 'Electron' : 'Web'} mode)`);
+    addDebugInfo(`Client ID configured: ${!!CLIENT_ID}`);
 
     try {
       await googleAuthService.signIn();
-      // The page will redirect, so we don't need to handle the result here
+      // The page will redirect for web auth, so we don't need to handle the result here
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Failed to sign in with Google';
+      addDebugInfo(`Sign-in error: ${errorMessage}`);
       setError(errorMessage);
       setIsLoading(false);
     }
   };
 
-  const CLIENT_ID = import.meta.env.VITE_GOOGLE_CLIENT_ID;
+  const testStoredToken = async () => {
+    addDebugInfo('Testing stored token...');
+    const isValid = await googleAuthService.validateStoredToken();
+    addDebugInfo(`Stored token valid: ${isValid}`);
+    
+    if (isValid) {
+      const currentUser = await googleAuthService.getCurrentUser();
+      if (currentUser) {
+        const user: User = {
+          id: currentUser.user.id,
+          email: currentUser.user.email,
+          name: currentUser.user.name,
+          picture: currentUser.user.picture,
+          accessToken: currentUser.accessToken
+        };
+        onLogin(user);
+      }
+    }
+  };
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 dark:from-gray-900 dark:to-gray-800 flex items-center justify-center p-4">
@@ -114,6 +153,23 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ onLogin }) => {
             </div>
           </div>
 
+          {/* Debug Info */}
+          {debugInfo.length > 0 && (
+            <div className="mb-4 p-3 bg-gray-50 dark:bg-gray-700 rounded-lg">
+              <div className="flex items-center space-x-2 mb-2">
+                <AlertTriangle className="h-4 w-4 text-gray-600 dark:text-gray-400" />
+                <span className="text-sm font-medium text-gray-700 dark:text-gray-300">Debug Info</span>
+              </div>
+              <div className="space-y-1">
+                {debugInfo.map((info, index) => (
+                  <p key={index} className="text-xs text-gray-600 dark:text-gray-400 font-mono">
+                    {info}
+                  </p>
+                ))}
+              </div>
+            </div>
+          )}
+
           {/* Error Message */}
           {error && (
             <div className="mb-6 p-4 bg-red-50 dark:bg-red-900/20 rounded-lg border border-red-200 dark:border-red-800">
@@ -127,7 +183,7 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ onLogin }) => {
                   <p className="font-medium">Setup Required:</p>
                   <ol className="list-decimal list-inside mt-1 space-y-1">
                     <li>Go to <a href="https://console.cloud.google.com/" target="_blank" rel="noopener noreferrer" className="underline inline-flex items-center">Google Cloud Console <ExternalLink className="h-3 w-3 ml-1" /></a></li>
-                    <li>Create OAuth 2.0 credentials</li>
+                    <li>Create OAuth 2.0 credentials (Web application)</li>
                     <li>Add <code className="bg-red-100 dark:bg-red-800 px-1 rounded">{window.location.origin}</code> to authorized origins</li>
                     <li>Set VITE_GOOGLE_CLIENT_ID in your .env file</li>
                   </ol>
@@ -177,6 +233,16 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ onLogin }) => {
                 </>
               )}
             </button>
+
+            {/* Test stored token button for debugging */}
+            {localStorage.getItem('google_access_token') && (
+              <button
+                onClick={testStoredToken}
+                className="w-full text-sm text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 underline"
+              >
+                Test Stored Token
+              </button>
+            )}
           </div>
 
           {/* Privacy Notice */}
