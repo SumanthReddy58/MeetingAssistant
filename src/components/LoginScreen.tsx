@@ -154,12 +154,26 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ onLogin }) => {
           </div>
 
           {/* Debug Info */}
-          {debugInfo.length > 0 && (
+          {(debugInfo.length > 0 || !CLIENT_ID) && (
             <div className="mb-4 p-3 bg-gray-50 dark:bg-gray-700 rounded-lg">
               <div className="flex items-center space-x-2 mb-2">
                 <AlertTriangle className="h-4 w-4 text-gray-600 dark:text-gray-400" />
-                <span className="text-sm font-medium text-gray-700 dark:text-gray-300">Debug Info</span>
+                <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                  {!CLIENT_ID ? 'Setup Required' : 'Debug Info'}
+                </span>
               </div>
+              {!CLIENT_ID && (
+                <div className="mb-3 p-2 bg-yellow-50 dark:bg-yellow-900/20 rounded border border-yellow-200 dark:border-yellow-800">
+                  <p className="text-sm text-yellow-800 dark:text-yellow-200 font-medium mb-2">
+                    Google Client ID not configured
+                  </p>
+                  <div className="text-xs text-yellow-700 dark:text-yellow-300 space-y-1">
+                    <p>1. Create a <code className="bg-yellow-100 dark:bg-yellow-800 px-1 rounded">.env</code> file in your project root</p>
+                    <p>2. Add: <code className="bg-yellow-100 dark:bg-yellow-800 px-1 rounded">VITE_GOOGLE_CLIENT_ID=your_client_id</code></p>
+                    <p>3. Get your Client ID from <a href="https://console.cloud.google.com/" target="_blank" rel="noopener noreferrer" className="underline">Google Cloud Console</a></p>
+                  </div>
+                </div>
+              )}
               <div className="space-y-1">
                 {debugInfo.map((info, index) => (
                   <p key={index} className="text-xs text-gray-600 dark:text-gray-400 font-mono">
