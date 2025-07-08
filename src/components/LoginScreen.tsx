@@ -175,7 +175,7 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ onLogin }) => {
                     Google Client ID not configured
                   </p>
                   <div className="text-xs text-yellow-700 dark:text-yellow-300 space-y-1">
-                    <p><strong>Step 1:</strong> Go to <a href="https://console.cloud.google.com/" target=\"_blank" rel="noopener noreferrer\" className="underline text-blue-600 dark:text-blue-400">Google Cloud Console</a></p>
+                    <p><strong>Step 1:</strong> Go to <a href="https://console.cloud.google.com/" target="_blank" rel="noopener noreferrer" className="underline text-blue-600 dark:text-blue-400">Google Cloud Console</a></p>
                     <p><strong>Step 2:</strong> Create a new project or select existing</p>
                     <p><strong>Step 3:</strong> Enable "Google Calendar API"</p>
                     <p><strong>Step 4:</strong> Go to "Credentials" → "Create Credentials" → "OAuth 2.0 Client IDs"</p>
