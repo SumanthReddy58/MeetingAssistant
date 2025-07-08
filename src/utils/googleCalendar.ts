@@ -24,9 +24,21 @@ class GoogleCalendarService {
 
   async initialize(accessToken: string) {
     try {
-      this.accessToken = accessToken;
-      this.isInitialized = true;
-      return true;
+      // Validate the token by making a test request
+      const response = await fetch('https://www.googleapis.com/calendar/v3/calendars/primary', {
+        headers: {
+          'Authorization': `Bearer ${accessToken}`,
+        },
+      });
+
+      if (response.ok) {
+        this.accessToken = accessToken;
+        this.isInitialized = true;
+        return true;
+      } else {
+        console.error('Token validation failed:', response.status, response.statusText);
+        return false;
+      }
     } catch (error) {
       console.error('Failed to initialize Google Calendar:', error);
       return false;
@@ -56,7 +68,8 @@ class GoogleCalendarService {
       });
 
       if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(`HTTP ${response.status}: ${errorData.error?.message || response.statusText}`);
       }
 
       const data = await response.json();
@@ -80,7 +93,8 @@ class GoogleCalendarService {
       });
 
       if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(`HTTP ${response.status}: ${errorData.error?.message || response.statusText}`);
       }
 
       return true;
@@ -102,13 +116,42 @@ class GoogleCalendarService {
       });
 
       if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
+        const errorData = await response.json().catch(() => ({}));
+        console.error('Failed to delete calendar event:', errorData);
+        return false;
       }
 
       return true;
     } catch (error) {
       console.error('Failed to delete calendar event:', error);
       return false;
+    }
+  }
+
+  async listEvents(maxResults: number = 10): Promise<any[]> {
+    if (!this.isInitialized || !this.accessToken) {
+      throw new Error('Google Calendar not initialized');
+    }
+
+    try {
+      const now = new Date().toISOString();
+      const response = await fetch(
+        `https://www.googleapis.com/calendar/v3/calendars/primary/events?timeMin=${now}&maxResults=${maxResults}&singleEvents=true&orderBy=startTime`,
+        {
+          headers: this.getHeaders(),
+        }
+      );
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(`HTTP ${response.status}: ${errorData.error?.message || response.statusText}`);
+      }
+
+      const data = await response.json();
+      return data.items || [];
+    } catch (error) {
+      console.error('Failed to list calendar events:', error);
+      throw error;
     }
   }
 }
