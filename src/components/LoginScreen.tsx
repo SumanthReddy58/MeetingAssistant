@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { FileText, Calendar, Mic, CheckCircle, ExternalLink } from 'lucide-react';
 import { googleAuthService } from '../utils/googleAuth';
 import { User } from '../types';
