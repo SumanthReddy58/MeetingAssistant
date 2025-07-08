@@ -34,23 +34,6 @@ class GoogleAuthService {
   }
 
   async getCurrentUser(): Promise<{ user: GoogleUser; accessToken: string } | null> {
-    return await electronAuthService.getCurrentUser();
-  }
-
-  async handleOAuthCallback(): Promise<{ user: GoogleUser; accessToken: string } | null> {
-    return await electronAuthService.handleOAuthCallback();
-  }
-
-  signOut(): void {
-    electronAuthService.signOut();
-  }
-}
-
-export const googleAuthService = new GoogleAuthService();
-
-  }
-
-  async getCurrentUser(): Promise<{ user: GoogleUser; accessToken: string } | null> {
     const accessToken = localStorage.getItem('google_access_token');
     const tokenExpiry = localStorage.getItem('google_token_expiry');
     const userStr = localStorage.getItem('google_user');
