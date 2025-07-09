@@ -70,7 +70,7 @@ export const highlightActionKeywords = (text: string): string => {
   
   ACTION_KEYWORDS.forEach(keyword => {
     const regex = new RegExp(`\\b${keyword}\\b`, 'gi');
-    highlightedText = highlightedText.replace(regex, `<mark class="bg-yellow-200 dark:bg-yellow-800 px-1 rounded">$&</mark>`);
+    highlightedText = highlightedText.replace(regex, `<mark class="bg-yellow-200 px-1">$&</mark>`);
   });
 
   return highlightedText;

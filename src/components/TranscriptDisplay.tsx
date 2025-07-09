@@ -22,36 +22,36 @@ export const TranscriptDisplay: React.FC<TranscriptDisplayProps> = ({
   }, [transcript, liveTranscript]);
 
   return (
-    <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700">
-      <div className="p-4 border-b border-gray-200 dark:border-gray-700">
-        <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
+    <div className="bg-white border border-gray-100">
+      <div className="p-8 border-b border-gray-100">
+        <h3 className="text-xl font-light text-gray-900">
           Live Transcript
         </h3>
       </div>
       
       <div 
         ref={scrollRef}
-        className="h-96 overflow-y-auto p-4 space-y-3"
+        className="h-96 overflow-y-auto p-8 space-y-6"
       >
         {transcript.map((segment) => (
           <div 
             key={segment.id}
-            className={`p-3 rounded-lg ${
+            className={`p-6 ${
               segment.containsActionItems 
-                ? 'bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800' 
-                : 'bg-gray-50 dark:bg-gray-700'
+                ? 'bg-yellow-50 border-l-4 border-yellow-400' 
+                : 'bg-gray-50'
             }`}
           >
-            <div className="flex items-center justify-between mb-2">
-              <span className="text-sm font-medium text-gray-900 dark:text-white">
+            <div className="flex items-center justify-between mb-4">
+              <span className="text-sm font-medium text-gray-900">
                 {segment.speaker}
               </span>
-              <span className="text-xs text-gray-500 dark:text-gray-400">
+              <span className="text-xs text-gray-500 font-light">
                 {segment.timestamp.toLocaleTimeString()}
               </span>
             </div>
             <p 
-              className="text-gray-700 dark:text-gray-300"
+              className="text-gray-700 leading-relaxed"
               dangerouslySetInnerHTML={{ 
                 __html: highlightActionKeywords(segment.text) 
               }}
@@ -60,27 +60,32 @@ export const TranscriptDisplay: React.FC<TranscriptDisplayProps> = ({
         ))}
         
         {isRecording && liveTranscript && (
-          <div className="p-3 rounded-lg bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800">
-            <div className="flex items-center justify-between mb-2">
-              <span className="text-sm font-medium text-gray-900 dark:text-white">
+          <div className="p-6 bg-blue-50 border-l-4 border-blue-400">
+            <div className="flex items-center justify-between mb-4">
+              <span className="text-sm font-medium text-gray-900">
                 You (Live)
               </span>
               <div className="flex items-center space-x-2">
                 <div className="w-2 h-2 bg-red-500 rounded-full animate-pulse"></div>
-                <span className="text-xs text-gray-500 dark:text-gray-400">
+                <span className="text-xs text-gray-500 font-light">
                   Recording...
                 </span>
               </div>
             </div>
-            <p className="text-gray-700 dark:text-gray-300 opacity-75">
+            <p className="text-gray-700 opacity-75 leading-relaxed">
               {liveTranscript}
             </p>
           </div>
         )}
         
         {transcript.length === 0 && !liveTranscript && (
-          <div className="flex items-center justify-center h-full text-gray-500 dark:text-gray-400">
-            <p>Start recording to see the transcript here...</p>
+          <div className="flex items-center justify-center h-full">
+            <div className="text-center">
+              <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                <Mic className="h-8 w-8 text-gray-400" />
+              </div>
+              <p className="text-gray-500 font-light">Start recording to see the transcript here</p>
+            </div>
           </div>
         )}
       </div>

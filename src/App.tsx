@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { LoginPage } from './components/LoginPage';
 import { Header } from './components/Header';
 import { SessionControl } from './components/SessionControl';
 import { TranscriptDisplay } from './components/TranscriptDisplay';
@@ -18,6 +19,7 @@ const dateReviver = (key: string, value: any) => {
 };
 
 function App() {
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [sessions, setSessions] = useLocalStorage<MeetingSession[]>('meeting-sessions', [], dateReviver);
   const [currentSession, setCurrentSession] = useState<MeetingSession | null>(null);
   const [showHistory, setShowHistory] = useState(false);
@@ -182,14 +184,27 @@ function App() {
     setShowHistory(false);
   };
 
+  const handleLogin = () => {
+    setIsLoggedIn(true);
+  };
+
+  const handleLogout = () => {
+    setIsLoggedIn(false);
+    setCurrentSession(null);
+  };
+
+  if (!isLoggedIn) {
+    return <LoginPage onLogin={handleLogin} />;
+  }
+
   if (!isSupported) {
     return (
-      <div className="min-h-screen bg-gray-100 dark:bg-gray-900 flex items-center justify-center">
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-center">
-          <h1 className="text-2xl font-bold text-gray-900 dark:text-white mb-4">
+          <h1 className="text-2xl font-light text-gray-900 mb-4">
             Voice Recognition Not Supported
           </h1>
-          <p className="text-gray-600 dark:text-gray-400">
+          <p className="text-gray-600 font-light">
             Your browser doesn't support voice recognition. Please use a modern browser like Chrome.
           </p>
         </div>
@@ -198,16 +213,17 @@ function App() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-100 dark:bg-gray-900">
+    <div className="min-h-screen bg-gray-50">
       <Header
         currentSession={currentSession}
         onNewSession={handleStartSession}
         onSettings={() => setShowHistory(!showHistory)}
+        onLogout={handleLogout}
       />
       
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          <div className="lg:col-span-2 space-y-6">
+      <div className="max-w-7xl mx-auto px-8 py-12">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-12">
+          <div className="lg:col-span-2 space-y-8">
             <SessionControl
               session={currentSession}
               isRecording={isListening}
@@ -224,7 +240,7 @@ function App() {
             />
           </div>
           
-          <div className="space-y-6">
+          <div className="space-y-8">
             <ActionItemsList
               actionItems={currentSession?.actionItems || []}
               onUpdateItem={handleUpdateActionItem}
