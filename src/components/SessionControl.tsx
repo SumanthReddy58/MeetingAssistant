@@ -20,34 +20,34 @@ export const SessionControl: React.FC<SessionControlProps> = ({
   onToggleRecording
 }) => {
   return (
-    <div className="bg-white border border-gray-100 p-8">
-      <div className="flex items-center justify-between mb-8">
+    <div className="bg-white border border-gray-50 p-12">
+      <div className="flex items-center justify-between mb-12">
         <div>
-          <h2 className="text-2xl font-light text-gray-900 mb-2">
+          <h2 className="text-2xl font-light text-black mb-3 tracking-tight">
             {session ? session.title : 'No Active Session'}
           </h2>
           {session && (
-            <p className="text-sm text-gray-500 font-light">
+            <p className="text-xs text-gray-400 font-light tracking-wide uppercase">
               Started: {session.startTime.toLocaleTimeString()}
             </p>
           )}
         </div>
         
         {session && (
-          <div className="flex items-center space-x-2">
-            <Circle className={`h-3 w-3 ${session.status === 'active' ? 'text-green-500 fill-current' : 'text-gray-400'}`} />
-            <span className="text-sm text-gray-600 font-light capitalize">
+          <div className="flex items-center space-x-3">
+            <Circle className={`h-2 w-2 ${session.status === 'active' ? 'text-green-500 fill-current' : 'text-gray-300'}`} />
+            <span className="text-xs text-gray-400 font-light tracking-wide uppercase">
               {session.status}
             </span>
           </div>
         )}
       </div>
         
-      <div className="flex items-center space-x-4">
+      <div className="flex items-center space-x-6">
           {!session ? (
             <button
               onClick={onStartSession}
-              className="flex items-center space-x-3 bg-gray-900 hover:bg-gray-800 text-white px-8 py-3 font-medium transition-colors"
+              className="flex items-center space-x-4 bg-black hover:bg-gray-900 text-white px-12 py-4 text-sm font-medium tracking-wide transition-colors"
             >
               <Play className="h-5 w-5" />
               <span>Start Session</span>
@@ -56,10 +56,10 @@ export const SessionControl: React.FC<SessionControlProps> = ({
             <>
               <button
                 onClick={onToggleRecording}
-                className={`flex items-center space-x-3 px-8 py-3 font-medium transition-colors ${
+                className={`flex items-center space-x-4 px-12 py-4 text-sm font-medium tracking-wide transition-colors ${
                   isRecording 
                     ? 'bg-red-500 hover:bg-red-600 text-white' 
-                    : 'bg-gray-900 hover:bg-gray-800 text-white'
+                    : 'bg-black hover:bg-gray-900 text-white'
                 }`}
               >
                 {isRecording ? (
@@ -77,7 +77,7 @@ export const SessionControl: React.FC<SessionControlProps> = ({
               
               <button
                 onClick={session.status === 'active' ? onPauseSession : onStartSession}
-                className="flex items-center space-x-3 bg-gray-100 hover:bg-gray-200 text-gray-900 px-8 py-3 font-medium transition-colors"
+                className="flex items-center space-x-4 bg-gray-50 hover:bg-gray-100 text-black px-12 py-4 text-sm font-medium tracking-wide transition-colors"
               >
                 {session.status === 'active' ? (
                   <>
@@ -94,7 +94,7 @@ export const SessionControl: React.FC<SessionControlProps> = ({
               
               <button
                 onClick={onStopSession}
-                className="flex items-center space-x-3 border border-gray-300 hover:border-gray-400 text-gray-700 px-8 py-3 font-medium transition-colors"
+                className="flex items-center space-x-4 border border-gray-200 hover:border-gray-300 text-gray-600 px-12 py-4 text-sm font-medium tracking-wide transition-colors"
               >
                 <Square className="h-5 w-5" />
                 <span>End Session</span>

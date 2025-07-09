@@ -20,9 +20,9 @@ export const SessionHistory: React.FC<SessionHistoryProps> = ({ sessions, onSess
   };
 
   return (
-    <div className="bg-white border border-gray-100">
-      <div className="p-8 border-b border-gray-100">
-        <h3 className="text-xl font-light text-gray-900">
+    <div className="bg-white border border-gray-50">
+      <div className="p-12 border-b border-gray-50">
+        <h3 className="text-xl font-light text-black tracking-tight">
           Session History
         </h3>
       </div>
@@ -32,32 +32,32 @@ export const SessionHistory: React.FC<SessionHistoryProps> = ({ sessions, onSess
           <div
             key={session.id}
             onClick={() => onSessionSelect(session)}
-            className="p-8 border-b border-gray-100 hover:bg-gray-50 cursor-pointer transition-colors"
+            className="p-12 border-b border-gray-50 hover:bg-gray-50 cursor-pointer transition-colors"
           >
             <div className="flex items-start justify-between">
               <div className="flex-1">
-                <h4 className="font-medium text-gray-900 mb-3">
+                <h4 className="font-medium text-black mb-4 text-sm tracking-wide">
                   {session.title}
                 </h4>
-                <div className="flex items-center space-x-6 text-sm text-gray-500 font-light">
+                <div className="flex items-center space-x-8 text-xs text-gray-400 font-light">
                   <span className="flex items-center">
-                    <Calendar className="h-4 w-4 mr-1" />
+                    <Calendar className="h-3 w-3 mr-2" />
                     {session.startTime.toLocaleDateString()}
                   </span>
                   <span className="flex items-center">
-                    <Clock className="h-4 w-4 mr-1" />
+                    <Clock className="h-3 w-3 mr-2" />
                     {session.endTime 
                       ? `${Math.round((session.endTime.getTime() - session.startTime.getTime()) / 1000 / 60)}m`
                       : 'Ongoing'
                     }
                   </span>
                   <span className="flex items-center">
-                    <FileText className="h-4 w-4 mr-1" />
+                    <FileText className="h-3 w-3 mr-2" />
                     {session.actionItems.length} items
                   </span>
                 </div>
-                <div className="flex items-center mt-3">
-                  <span className={`inline-flex items-center px-3 py-1 text-xs font-medium ${
+                <div className="flex items-center mt-4">
+                  <span className={`inline-flex items-center px-2 py-1 text-xs font-medium tracking-wide uppercase ${
                     session.status === 'completed' 
                       ? 'bg-green-100 text-green-800'
                       : session.status === 'active'
@@ -69,20 +69,20 @@ export const SessionHistory: React.FC<SessionHistoryProps> = ({ sessions, onSess
                 </div>
               </div>
               
-              <div className="flex items-center space-x-2">
+              <div className="flex items-center space-x-1">
                 <button
                   onClick={(e) => handleExportCSV(session, e)}
-                  className="p-2 hover:bg-gray-200 transition-colors"
+                  className="p-3 hover:bg-gray-100 transition-colors"
                   title="Export Action Items as CSV"
                 >
-                  <Download className="h-4 w-4 text-gray-500" />
+                  <Download className="h-3.5 w-3.5 text-gray-400" />
                 </button>
                 <button
                   onClick={(e) => handleExportTranscript(session, e)}
-                  className="p-2 hover:bg-gray-200 transition-colors"
+                  className="p-3 hover:bg-gray-100 transition-colors"
                   title="Export Transcript as Text"
                 >
-                  <FileText className="h-4 w-4 text-gray-500" />
+                  <FileText className="h-3.5 w-3.5 text-gray-400" />
                 </button>
               </div>
             </div>
@@ -90,11 +90,11 @@ export const SessionHistory: React.FC<SessionHistoryProps> = ({ sessions, onSess
         ))}
         
         {sessions.length === 0 && (
-          <div className="p-12 text-center">
-            <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
-              <FileText className="h-8 w-8 text-gray-400" />
+          <div className="p-16 text-center">
+            <div className="w-12 h-12 bg-gray-50 flex items-center justify-center mx-auto mb-6">
+              <FileText className="h-6 w-6 text-gray-300" />
             </div>
-            <p className="text-gray-500 font-light">No previous sessions found.</p>
+            <p className="text-gray-400 font-light text-sm tracking-wide">No previous sessions found.</p>
           </div>
         )}
       </div>
