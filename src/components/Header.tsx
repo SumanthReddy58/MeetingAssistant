@@ -1,6 +1,7 @@
 import React from 'react';
 import { Sun, Moon, Settings, Zap, User, LogOut, Bell, Search } from 'lucide-react';
 import { useTheme } from '../hooks/useTheme';
+import { useGoogleAuth } from '../hooks/useGoogleAuth';
 
 interface HeaderProps {
   currentSession: any;
@@ -16,6 +17,7 @@ export const Header: React.FC<HeaderProps> = ({
   onLogout
 }) => {
   const { theme, toggleTheme } = useTheme();
+  const { user, isAuthenticated } = useGoogleAuth();
 
   return (
     <header className="bg-white border-b border-gray-50">
@@ -89,9 +91,22 @@ export const Header: React.FC<HeaderProps> = ({
             </div>
 
             <div className="flex items-center space-x-3 pl-6 border-l border-gray-200">
-              <div className="w-8 h-8 bg-gradient-to-br from-gray-200 to-gray-300 rounded-full flex items-center justify-center">
-                <User className="h-4 w-4 text-gray-600" />
+              <div className="w-8 h-8 bg-gradient-to-br from-gray-200 to-gray-300 rounded-full flex items-center justify-center overflow-hidden">
+                {isAuthenticated && user?.picture ? (
+                  <img 
+                    src={user.picture} 
+                    alt={user.name || 'User'} 
+                    className="w-8 h-8 rounded-full object-cover"
+                  />
+                ) : (
+                  <User className="h-4 w-4 text-gray-600" />
+                )}
               </div>
+              {isAuthenticated && user?.name && (
+                <span className="text-sm font-medium text-gray-700 hidden md:block">
+                  {user.name}
+                </span>
+              )}
               <button
                 onClick={onLogout}
                 className="p-2.5 hover:bg-gray-100 rounded-lg transition-colors"

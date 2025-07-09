@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Calendar, CheckCircle, AlertCircle, ExternalLink, Settings, User } from 'lucide-react';
+import { Calendar, CheckCircle, AlertCircle, ExternalLink, Settings, User, RefreshCw } from 'lucide-react';
 import { useGoogleAuth } from '../hooks/useGoogleAuth';
 
 interface GoogleCalendarIntegrationProps {
@@ -9,11 +9,11 @@ interface GoogleCalendarIntegrationProps {
 export const GoogleCalendarIntegration: React.FC<GoogleCalendarIntegrationProps> = ({
   onIntegrationChange
 }) => {
-  const { isAuthenticated, user, isLoading, signIn, signOut } = useGoogleAuth();
+  const { isAuthenticated, user, isLoading, error, signIn, signOut } = useGoogleAuth();
   const [showDetails, setShowDetails] = useState(false);
 
   React.useEffect(() => {
-    onIntegrationChange(isAuthenticated, localStorage.getItem('google_access_token'));
+    onIntegrationChange(isAuthenticated, sessionStorage.getItem('google_access_token'));
   }, [isAuthenticated, onIntegrationChange]);
 
   return (
@@ -41,6 +41,15 @@ export const GoogleCalendarIntegration: React.FC<GoogleCalendarIntegrationProps>
       </div>
 
       <div className="p-8">
+        {error && (
+          <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg">
+            <div className="flex items-center space-x-2">
+              <AlertCircle className="h-5 w-5 text-red-600" />
+              <span className="text-sm text-red-700">{error}</span>
+            </div>
+          </div>
+        )}
+        
         {!isAuthenticated ? (
           <div className="text-center py-8">
             <div className="w-16 h-16 bg-gradient-to-br from-blue-100 to-blue-200 rounded-2xl flex items-center justify-center mx-auto mb-6">
@@ -55,10 +64,13 @@ export const GoogleCalendarIntegration: React.FC<GoogleCalendarIntegrationProps>
             <button
               onClick={signIn}
               disabled={isLoading}
-              className="bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white px-6 py-3 rounded-lg font-semibold shadow-lg hover:shadow-xl transition-all duration-200 transform hover:scale-105 flex items-center space-x-3 mx-auto"
+              className="bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 disabled:opacity-50 disabled:cursor-not-allowed text-white px-6 py-3 rounded-lg font-semibold shadow-lg hover:shadow-xl transition-all duration-200 transform hover:scale-105 flex items-center space-x-3 mx-auto"
             >
               {isLoading ? (
-                <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                <>
+                  <RefreshCw className="h-5 w-5 animate-spin" />
+                  <span>Connecting...</span>
+                </>
               ) : (
                 <>
                   <Calendar className="h-5 w-5" />
@@ -71,13 +83,21 @@ export const GoogleCalendarIntegration: React.FC<GoogleCalendarIntegrationProps>
           <div className="space-y-6">
             <div className="flex items-center space-x-4 p-4 bg-green-50 rounded-xl">
               <div className="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center">
-                <User className="h-6 w-6 text-green-600" />
+                {user?.picture ? (
+                  <img 
+                    src={user.picture} 
+                    alt={user.name} 
+                    className="w-12 h-12 rounded-full object-cover"
+                  />
+                ) : (
+                  <User className="h-6 w-6 text-green-600" />
+                )}
               </div>
               <div className="flex-1">
                 <h4 className="font-semibold text-green-900">
-                  Connected as {user?.name}
+                  {user?.name || 'Google User'}
                 </h4>
-                <p className="text-sm text-green-700">{user?.email}</p>
+                <p className="text-sm text-green-700">{user?.email || 'No email available'}</p>
               </div>
               <button
                 onClick={() => setShowDetails(!showDetails)}
@@ -91,15 +111,15 @@ export const GoogleCalendarIntegration: React.FC<GoogleCalendarIntegrationProps>
               <div className="space-y-4 p-4 bg-gray-50 rounded-xl">
                 <div className="flex items-center justify-between">
                   <span className="text-sm font-medium text-gray-700">Auto-create events</span>
-                  <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+                  <CheckCircle className="h-4 w-4 text-green-500" />
                 </div>
                 <div className="flex items-center justify-between">
                   <span className="text-sm font-medium text-gray-700">Email reminders</span>
-                  <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+                  <CheckCircle className="h-4 w-4 text-green-500" />
                 </div>
                 <div className="flex items-center justify-between">
                   <span className="text-sm font-medium text-gray-700">Priority colors</span>
-                  <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+                  <CheckCircle className="h-4 w-4 text-green-500" />
                 </div>
               </div>
             )}
