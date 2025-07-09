@@ -140,65 +140,149 @@ export const useGoogleAuth = () => {
         throw new Error('Google Client ID not configured. Please add VITE_GOOGLE_CLIENT_ID to your .env file.');
       }
 
-      // Create OAuth URL with Authorization Code Flow
-      const redirectUri = window.location.origin;
-      const scope = GOOGLE_SCOPES.join(' ');
-      const responseType = 'code';
-      const accessType = 'offline';
-      const prompt = 'consent';
-      
-      const authUrl = `https://accounts.google.com/oauth/authorize?` +
-        `client_id=${encodeURIComponent(clientId)}&` +
-        `redirect_uri=${encodeURIComponent(redirectUri)}&` +
-        `response_type=${responseType}&` +
-        `scope=${encodeURIComponent(scope)}&` +
-        `access_type=${accessType}&` +
-        `prompt=${prompt}&` +
-        `state=${Math.random().toString(36).substring(2, 15)}`;
-
-      // Open popup for authentication
-      const popup = window.open(authUrl, 'google-auth', 'width=500,height=600,scrollbars=yes,resizable=yes');
-      
-      if (!popup) {
-        throw new Error('Popup blocked. Please allow popups for this site.');
-      }
-
-      // Listen for the popup to receive the authorization code
-      const checkForCode = setInterval(async () => {
-        try {
-          if (popup.closed) {
-            clearInterval(checkForCode);
-            setAuthState(prev => ({ ...prev, isLoading: false }));
-            return;
-          }
-
-          const url = popup.location.href;
-          if (url.includes('code=')) {
-            clearInterval(checkForCode);
-            popup.close();
-            
-            // Extract authorization code
-            const urlParams = new URLSearchParams(url.split('?')[1]);
-            const code = urlParams.get('code');
-            
-            if (code) {
-              await exchangeCodeForTokens(code);
-            }
-          }
-        } catch (e) {
-          // Cross-origin error is expected until redirect
-        }
-      }, 1000);
+      // Try popup first, fallback to redirect if blocked
+      await attemptPopupAuth();
       
     } catch (error) {
       console.error('Google sign-in error:', error);
       setAuthState(prev => ({ 
         ...prev, 
         isLoading: false, 
-        error: error instanceof Error ? error.message : 'Sign-in failed' 
+        error: error instanceof Error ? error.message : 'Sign-in failed'
       }));
     }
   };
+
+  const attemptPopupAuth = async () => {
+    const clientId = import.meta.env.VITE_GOOGLE_CLIENT_ID;
+    const redirectUri = window.location.origin;
+    const scope = GOOGLE_SCOPES.join(' ');
+    const responseType = 'code';
+    const accessType = 'offline';
+    const prompt = 'consent';
+    const state = Math.random().toString(36).substring(2, 15);
+    
+    const authUrl = `https://accounts.google.com/oauth/authorize?` +
+      `client_id=${encodeURIComponent(clientId)}&` +
+      `redirect_uri=${encodeURIComponent(redirectUri)}&` +
+      `response_type=${responseType}&` +
+      `scope=${encodeURIComponent(scope)}&` +
+      `access_type=${accessType}&` +
+      `prompt=${prompt}&` +
+      `state=${state}`;
+
+    // Store state for validation
+    sessionStorage.setItem('google_auth_state', state);
+
+    // Try to open popup
+    const popup = window.open(
+      authUrl, 
+      'google-auth', 
+      'width=500,height=600,scrollbars=yes,resizable=yes,status=yes,location=yes'
+    );
+    
+    if (!popup || popup.closed || typeof popup.closed === 'undefined') {
+      // Popup was blocked, use redirect method instead
+      setAuthState(prev => ({ 
+        ...prev, 
+        isLoading: false, 
+        error: 'Popup blocked. Redirecting to Google sign-in...' 
+      }));
+      
+      // Small delay to show the message, then redirect
+      setTimeout(() => {
+        window.location.href = authUrl;
+      }, 1500);
+      return;
+    }
+
+    // Monitor popup for completion
+    return new Promise<void>((resolve, reject) => {
+      const checkPopup = setInterval(async () => {
+        try {
+          if (popup.closed) {
+            clearInterval(checkPopup);
+            setAuthState(prev => ({ ...prev, isLoading: false }));
+            reject(new Error('Authentication cancelled'));
+            return;
+          }
+
+          // Check if popup has navigated to our redirect URI
+          try {
+            const url = popup.location.href;
+            if (url.includes(redirectUri) && url.includes('code=')) {
+              clearInterval(checkPopup);
+              popup.close();
+              
+              // Extract and validate authorization code
+              const urlParams = new URLSearchParams(url.split('?')[1]);
+              const code = urlParams.get('code');
+              const returnedState = urlParams.get('state');
+              
+              // Validate state parameter
+              const storedState = sessionStorage.getItem('google_auth_state');
+              if (returnedState !== storedState) {
+                reject(new Error('Invalid state parameter'));
+                return;
+              }
+              
+              if (code) {
+                await exchangeCodeForTokens(code);
+                resolve();
+              } else {
+                reject(new Error('No authorization code received'));
+              }
+            }
+          } catch (e) {
+            // Cross-origin error is expected until redirect completes
+          }
+        } catch (error) {
+          clearInterval(checkPopup);
+          if (!popup.closed) popup.close();
+          reject(error);
+        }
+      }, 1000);
+
+      // Timeout after 5 minutes
+      setTimeout(() => {
+        clearInterval(checkPopup);
+        if (!popup.closed) popup.close();
+        reject(new Error('Authentication timeout'));
+      }, 300000);
+    });
+  };
+
+  // Handle redirect-based auth completion
+  useEffect(() => {
+    const handleRedirectAuth = async () => {
+      const urlParams = new URLSearchParams(window.location.search);
+      const code = urlParams.get('code');
+      const state = urlParams.get('state');
+      const storedState = sessionStorage.getItem('google_auth_state');
+      
+      if (code && state && state === storedState) {
+        setAuthState(prev => ({ ...prev, isLoading: true }));
+        
+        try {
+          await exchangeCodeForTokens(code);
+          // Clean up URL
+          window.history.replaceState({}, document.title, window.location.pathname);
+        } catch (error) {
+          console.error('Redirect auth error:', error);
+          setAuthState(prev => ({ 
+            ...prev, 
+            isLoading: false, 
+            error: error instanceof Error ? error.message : 'Authentication failed' 
+          }));
+        }
+        
+        // Clean up stored state
+        sessionStorage.removeItem('google_auth_state');
+      }
+    };
+
+    handleRedirectAuth();
+  }, []);
 
   const exchangeCodeForTokens = async (code: string) => {
     try {

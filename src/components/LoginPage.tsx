@@ -138,8 +138,24 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLogin }) => {
               </button>
               
               {googleError && (
-                <div className="text-red-600 text-xs text-center bg-red-50 p-2 rounded-lg">
-                  {googleError}
+                <div className={`text-xs text-center p-3 rounded-lg ${
+                  googleError.includes('Redirecting') 
+                    ? 'text-blue-600 bg-blue-50 border border-blue-200' 
+                    : 'text-red-600 bg-red-50 border border-red-200'
+                }`}>
+                  <div className="flex items-center justify-center">
+                    {googleError.includes('Redirecting') && (
+                      <RefreshCw className="w-4 h-4 animate-spin mr-2" />
+                    )}
+                    {googleError}
+                  </div>
+                  {googleError.includes('Popup blocked') && (
+                    <div className="mt-2 text-xs text-gray-600">
+                      <p>To use popup sign-in, please:</p>
+                      <p>1. Allow popups for this site in your browser</p>
+                      <p>2. Or wait for automatic redirect to Google</p>
+                    </div>
+                  )}
                 </div>
               )}
               
