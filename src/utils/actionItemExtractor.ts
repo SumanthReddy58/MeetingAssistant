@@ -1,5 +1,6 @@
 import { ActionItem } from '../types';
 import { extractTimeFromText } from './timeExtractor';
+import { parseNLPDateTime } from './nlpDateParser';
 
 const ACTION_KEYWORDS = [
   'follow up', 'follow-up', 'action item', 'todo', 'to do', 'task',
@@ -30,7 +31,12 @@ export const extractActionItems = (text: string): Partial<ActionItem>[] => {
     if (hasActionKeyword) {
       // Extract time information
       const timeExtractions = extractTimeFromText(sentence);
-      const scheduledTime = timeExtractions.length > 0 ? timeExtractions[0].extractedTime : undefined;
+      let scheduledTime = timeExtractions.length > 0 ? timeExtractions[0].extractedTime : undefined;
+      
+      // Try NLP parsing if no time extraction found
+      if (!scheduledTime) {
+        scheduledTime = parseNLPDateTime(sentence);
+      }
       
       // Determine priority
       let priority: 'low' | 'medium' | 'high' = 'medium';

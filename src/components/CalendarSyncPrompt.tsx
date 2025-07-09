@@ -134,6 +134,7 @@ export const CalendarSyncPrompt: React.FC<CalendarSyncPromptProps> = ({
 
   const handleSync = async () => {
     if (!options.enableSync) {
+      onSync(''); // Pass empty string to indicate no calendar sync
       onClose();
       return;
     }
@@ -167,7 +168,6 @@ export const CalendarSyncPrompt: React.FC<CalendarSyncPromptProps> = ({
           duration: 4000,
           position: 'top-right',
         });
-        onClose();
       }
     } catch (error) {
       console.error('Calendar sync error:', error);

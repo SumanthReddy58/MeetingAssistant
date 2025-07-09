@@ -50,29 +50,22 @@ export const ActionItemsList: React.FC<ActionItemsListProps> = ({
 
   const handleAddItem = () => {
     if (newItemText.trim()) {
-      const newTask: Partial<ActionItem> = {
+      const fullTask: ActionItem = {
+        id: Date.now().toString() + Math.random().toString(36).substr(2, 9),
         text: newItemText,
         priority: newItemPriority,
-        assignee: newItemAssignee || undefined,
         completed: false,
-        createdAt: new Date()
+        createdAt: new Date(),
+        assignee: newItemAssignee || undefined,
       };
 
-      // If calendar is connected, show sync prompt
+      // Always show calendar sync prompt for manually added items
       if (isCalendarConnected && calendarAccessToken) {
-        const fullTask: ActionItem = {
-          id: Date.now().toString() + Math.random().toString(36).substr(2, 9),
-          ...newTask,
-          text: newTask.text || '',
-          priority: newTask.priority || 'medium',
-          completed: false,
-          createdAt: new Date()
-        };
         setPendingTask(fullTask);
         setShowCalendarPrompt(true);
       } else {
         // Add directly without calendar sync
-        onAddItem(newTask);
+        onAddItem(fullTask);
       }
 
       setNewItemText('');
@@ -88,6 +81,7 @@ export const ActionItemsList: React.FC<ActionItemsListProps> = ({
       onAddItem(taskWithCalendar);
       setPendingTask(null);
     }
+    setShowCalendarPrompt(false);
   };
 
   const handleCalendarPromptClose = () => {

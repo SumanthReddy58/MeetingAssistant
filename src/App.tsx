@@ -209,21 +209,11 @@ function App() {
         createdAt: new Date(),
         assignee: item.assignee,
         dueDate: item.dueDate,
-        scheduledTime: item.scheduledTime
+        scheduledTime: item.scheduledTime,
+        calendarEventId: item.calendarEventId
       };
 
-      // Create calendar event if connected and item has scheduled time
-      if (isCalendarConnected && calendarAccessToken && (newItem.scheduledTime || newItem.dueDate)) {
-        const calendarService = new CalendarService(calendarAccessToken);
-        calendarService.createEvent(newItem).then(eventId => {
-          if (eventId) {
-            newItem.calendarEventId = eventId;
-            updateSessionWithNewItem(newItem);
-          }
-        });
-      } else {
-        updateSessionWithNewItem(newItem);
-      }
+      updateSessionWithNewItem(newItem);
 
       // Post to Slack if connected
       if (slackService) {
