@@ -8,6 +8,7 @@ export interface ActionItem {
   scheduledTime?: Date;
   assignee?: string;
   calendarEventId?: string;
+  notes?: string;
 }
 
 export interface TranscriptSegment {

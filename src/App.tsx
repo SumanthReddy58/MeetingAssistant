@@ -320,6 +320,8 @@ function App() {
                 onUpdateItem={handleUpdateActionItem}
                 onDeleteItem={handleDeleteActionItem}
                 onAddItem={handleAddActionItem}
+                isCalendarConnected={isCalendarConnected}
+                calendarAccessToken={calendarAccessToken}
               />
               
               {/* Integrations Panel */}
