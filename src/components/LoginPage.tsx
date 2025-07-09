@@ -49,10 +49,10 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLogin }) => {
               </div>
             </div>
             <h1 className="text-3xl font-bold text-gray-900 mb-4 leading-tight">
-              Meeting Assistant
+              AI Meeting Assistant
             </h1>
             <p className="text-lg text-gray-600 leading-relaxed">
-              Transform your meetings with AI-powered voice recognition and intelligent action item extraction.
+              Revolutionize your meetings with real-time AI transcription, smart action item detection, and seamless calendar integration for maximum productivity.
             </p>
           </div>
 
@@ -62,9 +62,9 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLogin }) => {
                 <FileText className="h-5 w-5 text-blue-600" />
               </div>
               <div>
-                <h3 className="font-semibold text-gray-900 mb-1 text-sm">Live Transcription</h3>
+                <h3 className="font-semibold text-gray-900 mb-1 text-sm">Real-Time Voice Recognition</h3>
                 <p className="text-xs text-gray-600 leading-relaxed">
-                  Real-time speech-to-text with intelligent formatting
+                  Advanced AI converts speech to text instantly with speaker identification and smart formatting
                 </p>
               </div>
             </div>
@@ -74,9 +74,9 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLogin }) => {
                 <TrendingUp className="h-5 w-5 text-purple-600" />
               </div>
               <div>
-                <h3 className="font-semibold text-gray-900 mb-1 text-sm">Smart Action Items</h3>
+                <h3 className="font-semibold text-gray-900 mb-1 text-sm">Intelligent Task Extraction</h3>
                 <p className="text-xs text-gray-600 leading-relaxed">
-                  AI automatically extracts and organizes action items
+                  Machine learning automatically identifies, prioritizes, and organizes actionable tasks from conversations
                 </p>
               </div>
             </div>
@@ -86,9 +86,9 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLogin }) => {
                 <Calendar className="h-5 w-5 text-green-600" />
               </div>
               <div>
-                <h3 className="font-semibold text-gray-900 mb-1 text-sm">Calendar Integration</h3>
+                <h3 className="font-semibold text-gray-900 mb-1 text-sm">Smart Calendar Sync</h3>
                 <p className="text-xs text-gray-600 leading-relaxed">
-                  Seamlessly sync with your calendar and schedule follow-ups
+                  Automatically creates calendar events with reminders, priority colors, and intelligent scheduling
                 </p>
               </div>
             </div>

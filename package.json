@@ -13,6 +13,7 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "@heroicons/react": "^2.2.0",
     "electron-oauth2": "^3.0.0",
     "googleapis": "^152.0.0",
     "lucide-react": "^0.344.0",

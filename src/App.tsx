@@ -14,6 +14,7 @@ import { SlackIntegration } from './components/SlackIntegration';
 import { MeetingSession, ActionItem, TranscriptSegment } from './types';
 import { extractActionItems } from './utils/actionItemExtractor';
 import { Toaster } from 'react-hot-toast';
+import { Settings } from 'lucide-react';
 
 // Date reviver function to convert ISO date strings back to Date objects
 const dateReviver = (key: string, value: any) => {
@@ -291,9 +292,11 @@ function App() {
           onLogout={handleLogout}
         />
         
-        <div className="max-w-7xl mx-auto px-8 py-12">
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-            <div className="lg:col-span-2 space-y-8">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+          {/* Main Content Area */}
+          <div className="grid grid-cols-1 xl:grid-cols-4 gap-6 lg:gap-8">
+            {/* Primary Content - Session Control & Transcript */}
+            <div className="xl:col-span-3 space-y-6">
               <SessionControl
                 session={currentSession}
                 isRecording={isListening}
@@ -310,7 +313,8 @@ function App() {
               />
             </div>
             
-            <div className="space-y-8">
+            {/* Sidebar - Action Items & Integrations */}
+            <div className="xl:col-span-1 space-y-6">
               <ActionItemsList
                 actionItems={currentSession?.actionItems || []}
                 onUpdateItem={handleUpdateActionItem}
@@ -318,18 +322,30 @@ function App() {
                 onAddItem={handleAddActionItem}
               />
               
-              <GoogleCalendarIntegration
-                onIntegrationChange={handleCalendarIntegrationChange}
-              />
+              {/* Integrations Panel */}
+              <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
+                <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center">
+                  <Settings className="h-5 w-5 mr-2 text-gray-600" />
+                  Integrations
+                </h3>
+                <div className="space-y-4">
+                  <GoogleCalendarIntegration
+                    onIntegrationChange={handleCalendarIntegrationChange}
+                  />
+                  
+                  <SlackIntegration
+                    onSlackServiceChange={handleSlackServiceChange}
+                  />
+                </div>
+              </div>
               
-              <SlackIntegration
-                onSlackServiceChange={handleSlackServiceChange}
-              />
-              
-              <SessionHistory
-                sessions={sessions}
-                onSessionSelect={handleSessionSelect}
-              />
+              {/* Session History */}
+              <div className="bg-white rounded-2xl shadow-sm border border-gray-100">
+                <SessionHistory
+                  sessions={sessions}
+                  onSessionSelect={handleSessionSelect}
+                />
+              </div>
             </div>
           </div>
         </div>
