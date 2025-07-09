@@ -1,4 +1,5 @@
 import React, { useEffect, useRef } from 'react';
+import { Mic } from 'lucide-react';
 import { TranscriptSegment } from '../types';
 import { highlightActionKeywords } from '../utils/actionItemExtractor';
 
