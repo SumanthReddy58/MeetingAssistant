@@ -76,7 +76,6 @@ export const Header: React.FC<HeaderProps> = ({
                 <LogOut className="h-4 w-4 text-gray-600" />
               </button>
             </div>
-            </button>
           </div>
         </div>
       </div>
