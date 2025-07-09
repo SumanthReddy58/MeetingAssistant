@@ -29,18 +29,9 @@ export interface MeetingSession {
   status: 'active' | 'completed' | 'paused';
 }
 
-export interface User {
-  id: string;
-  email: string;
-  name: string;
-  picture?: string;
-  accessToken: string;
-}
-
 export interface AppState {
   currentSession: MeetingSession | null;
   sessions: MeetingSession[];
   isRecording: boolean;
   theme: 'light' | 'dark';
-  user: User | null;
 }
