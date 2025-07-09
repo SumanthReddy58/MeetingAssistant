@@ -1,17 +1,22 @@
 import React from 'react';
-import { Sun, Moon, Settings, FileText } from 'lucide-react';
+import { Sun, Moon, Settings, FileText, LogOut, User } from 'lucide-react';
 import { useTheme } from '../hooks/useTheme';
+import { User as UserType } from '../types';
 
 interface HeaderProps {
   currentSession: any;
+  user: UserType | null;
   onNewSession: () => void;
   onSettings: () => void;
+  onSignOut: () => void;
 }
 
 export const Header: React.FC<HeaderProps> = ({ 
   currentSession, 
+  user, 
   onNewSession, 
-  onSettings
+  onSettings, 
+  onSignOut 
 }) => {
   const { theme, toggleTheme } = useTheme();
 
@@ -60,6 +65,35 @@ export const Header: React.FC<HeaderProps> = ({
             >
               <Settings className="h-5 w-5 text-gray-600 dark:text-gray-300" />
             </button>
+
+            {/* User Menu */}
+            {user && (
+              <div className="flex items-center space-x-3">
+                <div className="flex items-center space-x-2">
+                  {user.picture ? (
+                    <img
+                      src={user.picture}
+                      alt={user.name}
+                      className="w-8 h-8 rounded-full"
+                    />
+                  ) : (
+                    <div className="w-8 h-8 bg-gray-300 dark:bg-gray-600 rounded-full flex items-center justify-center">
+                      <User className="h-4 w-4 text-gray-600 dark:text-gray-300" />
+                    </div>
+                  )}
+                  <span className="text-sm text-gray-700 dark:text-gray-300 hidden sm:block">
+                    {user.name}
+                  </span>
+                </div>
+                <button
+                  onClick={onSignOut}
+                  className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+                  title="Sign Out"
+                >
+                  <LogOut className="h-5 w-5 text-gray-600 dark:text-gray-300" />
+                </button>
+              </div>
+            )}
           </div>
         </div>
       </div>
