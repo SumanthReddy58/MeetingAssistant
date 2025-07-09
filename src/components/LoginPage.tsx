@@ -35,12 +35,12 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLogin }) => {
   };
 
   return (
-    <div className="min-h-screen bg-white flex">
+    <div className="h-screen bg-white flex overflow-hidden">
       {/* Left Panel - Hero */}
-      <div className="hidden lg:flex lg:w-1/2 bg-gray-50 flex-col justify-center px-20">
+      <div className="hidden lg:flex lg:w-1/2 bg-gray-50 flex-col justify-center px-12 xl:px-20">
         <div className="max-w-sm">
-          <div className="mb-16">
-            <div className="relative mb-12">
+          <div className="mb-8">
+            <div className="relative mb-8">
               <div className="w-16 h-16 bg-gradient-to-br from-blue-600 to-purple-600 rounded-2xl flex items-center justify-center shadow-xl">
                 <Zap className="h-8 w-8 text-white" />
               </div>
@@ -48,45 +48,45 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLogin }) => {
                 <Sparkles className="h-3 w-3 text-white" />
               </div>
             </div>
-            <h1 className="text-4xl font-bold text-gray-900 mb-6 leading-tight">
+            <h1 className="text-3xl xl:text-4xl font-bold text-gray-900 mb-4 leading-tight">
               Meeting Assistant
             </h1>
-            <p className="text-xl text-gray-600 leading-relaxed">
+            <p className="text-lg xl:text-xl text-gray-600 leading-relaxed">
               Transform your meetings with AI-powered voice recognition and intelligent action item extraction.
             </p>
           </div>
 
-          <div className="space-y-12">
-            <div className="flex items-start space-x-6">
+          <div className="space-y-8">
+            <div className="flex items-start space-x-4">
               <div className="w-12 h-12 bg-gradient-to-br from-blue-100 to-blue-200 rounded-xl flex items-center justify-center flex-shrink-0">
                 <FileText className="h-6 w-6 text-blue-600" />
               </div>
               <div>
-                <h3 className="font-semibold text-gray-900 mb-2">Live Transcription</h3>
+                <h3 className="font-semibold text-gray-900 mb-1">Live Transcription</h3>
                 <p className="text-sm text-gray-600 leading-relaxed">
                   Real-time speech-to-text with intelligent formatting and speaker identification
                 </p>
               </div>
             </div>
 
-            <div className="flex items-start space-x-6">
+            <div className="flex items-start space-x-4">
               <div className="w-12 h-12 bg-gradient-to-br from-purple-100 to-purple-200 rounded-xl flex items-center justify-center flex-shrink-0">
                 <TrendingUp className="h-6 w-6 text-purple-600" />
               </div>
               <div>
-                <h3 className="font-semibold text-gray-900 mb-2">Smart Action Items</h3>
+                <h3 className="font-semibold text-gray-900 mb-1">Smart Action Items</h3>
                 <p className="text-sm text-gray-600 leading-relaxed">
                   AI automatically extracts and organizes action items with priority levels
                 </p>
               </div>
             </div>
 
-            <div className="flex items-start space-x-6">
+            <div className="flex items-start space-x-4">
               <div className="w-12 h-12 bg-gradient-to-br from-green-100 to-green-200 rounded-xl flex items-center justify-center flex-shrink-0">
                 <Calendar className="h-6 w-6 text-green-600" />
               </div>
               <div>
-                <h3 className="font-semibold text-gray-900 mb-2">Calendar Integration</h3>
+                <h3 className="font-semibold text-gray-900 mb-1">Calendar Integration</h3>
                 <p className="text-sm text-gray-600 leading-relaxed">
                   Seamlessly sync with your calendar and automatically schedule follow-ups
                 </p>
@@ -97,15 +97,15 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLogin }) => {
       </div>
 
       {/* Right Panel - Login Form */}
-      <div className="flex-1 flex flex-col justify-center px-12 sm:px-20 lg:px-32">
-        <div className="w-full max-w-xs mx-auto">
-          <div className="mb-16">
-            <div className="lg:hidden mb-12">
+      <div className="flex-1 flex flex-col justify-center px-8 sm:px-12 lg:px-16 xl:px-24 py-8">
+        <div className="w-full max-w-sm mx-auto">
+          <div className="mb-8">
+            <div className="lg:hidden mb-8">
               <div className="w-12 h-12 bg-gradient-to-br from-blue-600 to-purple-600 rounded-xl flex items-center justify-center mb-6">
                 <Zap className="h-6 w-6 text-white" />
               </div>
             </div>
-            <h2 className="text-3xl font-bold text-gray-900 mb-4">
+            <h2 className="text-2xl xl:text-3xl font-bold text-gray-900 mb-3">
               Welcome back
             </h2>
             <p className="text-gray-600">
@@ -113,14 +113,14 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLogin }) => {
             </p>
           </div>
 
-          <form onSubmit={handleSubmit} className="space-y-8">
+          <form onSubmit={handleSubmit} className="space-y-6">
             {/* Google Sign-in Button */}
             <div className="space-y-4">
               <button
                 type="button"
                 onClick={handleGoogleSignIn}
                 disabled={googleLoading}
-                className="w-full bg-white hover:bg-gray-50 border-2 border-gray-200 hover:border-gray-300 text-gray-700 py-4 px-6 rounded-xl focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center group text-lg font-semibold shadow-sm hover:shadow-md"
+                className="w-full bg-white hover:bg-gray-50 border-2 border-gray-200 hover:border-gray-300 text-gray-700 py-3 px-6 rounded-xl focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center group font-semibold shadow-sm hover:shadow-md"
               >
                 {googleLoading ? (
                   <RefreshCw className="w-6 h-6 animate-spin mr-3" />
@@ -145,7 +145,7 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLogin }) => {
               
               <div className="relative">
                 <div className="absolute inset-0 flex items-center">
-                  <div className="w-full border-t border-gray-200" />
+                  <div className="w-full border-t border-gray-100" />
                 </div>
                 <div className="relative flex justify-center text-sm">
                   <span className="px-4 bg-white text-gray-500 font-medium">Or continue with email</span>
@@ -154,7 +154,7 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLogin }) => {
             </div>
 
             <div>
-              <label htmlFor="email" className="block text-sm font-semibold text-gray-900 mb-3">
+              <label htmlFor="email" className="block text-sm font-semibold text-gray-900 mb-2">
                 Email address
               </label>
               <input
@@ -163,13 +163,13 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLogin }) => {
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 required
-                className="w-full px-4 py-4 border-2 border-gray-200 rounded-xl bg-white focus:border-blue-500 focus:ring-0 text-gray-900 placeholder-gray-500 transition-colors"
+                className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl bg-white focus:border-blue-500 focus:ring-0 text-gray-900 placeholder-gray-500 transition-colors"
                 placeholder="Enter your email"
               />
             </div>
 
             <div>
-              <label htmlFor="password" className="block text-sm font-semibold text-gray-900 mb-3">
+              <label htmlFor="password" className="block text-sm font-semibold text-gray-900 mb-2">
                 Password
               </label>
               <input
@@ -178,12 +178,12 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLogin }) => {
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 required
-                className="w-full px-4 py-4 border-2 border-gray-200 rounded-xl bg-white focus:border-blue-500 focus:ring-0 text-gray-900 placeholder-gray-500 transition-colors"
+                className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl bg-white focus:border-blue-500 focus:ring-0 text-gray-900 placeholder-gray-500 transition-colors"
                 placeholder="Enter your password"
               />
             </div>
 
-            <div className="flex items-center justify-between pt-6">
+            <div className="flex items-center justify-between pt-4">
               <label className="flex items-center">
                 <input
                   type="checkbox"
@@ -202,7 +202,7 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLogin }) => {
             <button
               type="submit"
               disabled={isLoading}
-              className="w-full bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white py-4 px-6 rounded-xl focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center group text-lg font-semibold shadow-lg hover:shadow-xl transform hover:scale-105"
+              className="w-full bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white py-3 px-6 rounded-xl focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center group font-semibold shadow-lg hover:shadow-xl transform hover:scale-105"
             >
               {isLoading ? (
                 <div className="w-6 h-6 border-2 border-white border-t-transparent rounded-full animate-spin" />
@@ -215,7 +215,7 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLogin }) => {
             </button>
           </form>
 
-          <div className="mt-12 pt-8 border-t border-gray-100">
+          <div className="mt-8 pt-6 border-t border-gray-100">
             <p className="text-center text-sm text-gray-600">
               Don't have an account?{' '}
               <button className="text-blue-600 hover:text-blue-700 font-semibold transition-colors">
