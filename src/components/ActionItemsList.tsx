@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Check, X, Edit2, Plus, AlertCircle, Clock, User, Calendar, CheckCircle } from 'lucide-react';
+import { Check, X, Edit2, Plus, AlertCircle, Clock, User, Calendar, CheckCircle, Target, Zap } from 'lucide-react';
 import { ActionItem } from '../types';
 import { formatTimeForDisplay } from '../utils/timeExtractor';
 
@@ -67,15 +67,16 @@ export const ActionItemsList: React.FC<ActionItemsListProps> = ({
   };
 
   return (
-    <div className="bg-white border border-gray-50">
-      <div className="p-12 border-b border-gray-50">
+    <div className="bg-white rounded-2xl shadow-sm border border-gray-100">
+      <div className="p-8 border-b border-gray-100">
         <div className="flex items-center justify-between">
-          <h3 className="text-xl font-light text-black tracking-tight">
+          <h3 className="text-xl font-semibold text-gray-900 flex items-center">
+            <Target className="h-6 w-6 mr-3 text-purple-600" />
             Action Items ({actionItems.length})
           </h3>
           <button
             onClick={() => setShowAddForm(true)}
-            className="flex items-center space-x-3 bg-black hover:bg-gray-900 text-white px-6 py-2.5 text-xs font-medium tracking-wide uppercase transition-colors"
+            className="flex items-center space-x-2 bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white px-4 py-2.5 rounded-lg text-sm font-semibold shadow-lg hover:shadow-xl transition-all duration-200 transform hover:scale-105"
           >
             <Plus className="h-4 w-4" />
             <span>Add Item</span>
@@ -83,22 +84,22 @@ export const ActionItemsList: React.FC<ActionItemsListProps> = ({
         </div>
       </div>
 
-      <div className="p-12">
+      <div className="p-8">
         {showAddForm && (
-          <div className="mb-12 p-8 border border-gray-100 bg-gray-50">
-            <div className="space-y-6">
+          <div className="mb-8 p-6 border border-gray-200 bg-gray-50 rounded-xl">
+            <div className="space-y-4">
               <input
                 type="text"
                 value={newItemText}
                 onChange={(e) => setNewItemText(e.target.value)}
                 placeholder="Enter action item..."
-                className="w-full px-0 py-4 border-0 border-b border-gray-200 bg-transparent focus:border-black focus:ring-0 text-black placeholder-gray-400 text-sm"
+                className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent bg-white text-gray-900 placeholder-gray-500"
               />
-              <div className="flex space-x-6">
+              <div className="flex space-x-4">
                 <select
                   value={newItemPriority}
                   onChange={(e) => setNewItemPriority(e.target.value as 'low' | 'medium' | 'high')}
-                  className="px-0 py-3 border-0 border-b border-gray-200 bg-transparent focus:border-black focus:ring-0 text-black text-sm"
+                  className="px-4 py-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent bg-white text-gray-900"
                 >
                   <option value="low">Low Priority</option>
                   <option value="medium">Medium Priority</option>
@@ -109,19 +110,19 @@ export const ActionItemsList: React.FC<ActionItemsListProps> = ({
                   value={newItemAssignee}
                   onChange={(e) => setNewItemAssignee(e.target.value)}
                   placeholder="Assignee (optional)"
-                  className="flex-1 px-0 py-3 border-0 border-b border-gray-200 bg-transparent focus:border-black focus:ring-0 text-black placeholder-gray-400 text-sm"
+                  className="flex-1 px-4 py-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent bg-white text-gray-900 placeholder-gray-500"
                 />
               </div>
-              <div className="flex space-x-2">
+              <div className="flex space-x-3">
                 <button
                   onClick={handleAddItem}
-                  className="bg-black hover:bg-gray-900 text-white px-8 py-3 text-sm font-medium tracking-wide transition-colors"
+                  className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white px-6 py-3 rounded-lg text-sm font-semibold transition-all duration-200"
                 >
                   Add Item
                 </button>
                 <button
                   onClick={() => setShowAddForm(false)}
-                  className="border border-gray-200 hover:border-gray-300 text-gray-600 px-8 py-3 text-sm font-medium tracking-wide transition-colors"
+                  className="bg-white hover:bg-gray-50 border border-gray-200 hover:border-gray-300 text-gray-700 px-6 py-3 rounded-lg text-sm font-semibold transition-all duration-200"
                 >
                   Cancel
                 </button>
@@ -130,23 +131,23 @@ export const ActionItemsList: React.FC<ActionItemsListProps> = ({
           </div>
         )}
 
-        <div className="space-y-6">
+        <div className="space-y-4">
           {actionItems.map((item) => (
             <div
               key={item.id}
-              className={`p-8 border-l-2 ${
+              className={`p-6 rounded-xl border-l-4 transition-all duration-200 ${
                 item.completed 
-                  ? 'bg-green-50 border-green-500' 
-                  : 'bg-gray-50 border-gray-200'
+                  ? 'bg-gradient-to-r from-green-50 to-emerald-50 border-green-500 shadow-sm' 
+                  : 'bg-gray-50 hover:bg-gray-100 border-gray-200'
               }`}
             >
               <div className="flex items-start space-x-4">
                 <button
                   onClick={() => onUpdateItem(item.id, { completed: !item.completed })}
-                  className={`flex-shrink-0 w-4 h-4 border-2 flex items-center justify-center transition-colors ${
+                  className={`flex-shrink-0 w-5 h-5 border-2 rounded flex items-center justify-center transition-colors ${
                     item.completed
-                      ? 'bg-green-500 border-green-500 text-white'
-                      : 'border-gray-300 hover:border-green-500'
+                      ? 'bg-green-500 border-green-500 text-white shadow-sm'
+                      : 'border-gray-300 hover:border-green-500 hover:bg-green-50'
                   }`}
                 >
                   {item.completed && <CheckCircle className="h-3 w-3" />}
@@ -154,23 +155,23 @@ export const ActionItemsList: React.FC<ActionItemsListProps> = ({
 
                 <div className="flex-1">
                   {editingId === item.id ? (
-                    <div className="space-y-4">
+                    <div className="space-y-3">
                       <input
                         type="text"
                         value={editText}
                         onChange={(e) => setEditText(e.target.value)}
-                        className="w-full px-0 py-3 border-0 border-b border-gray-200 bg-transparent focus:border-black focus:ring-0 text-black text-sm"
+                        className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent bg-white text-gray-900"
                       />
-                      <div className="flex space-x-2">
+                      <div className="flex space-x-3">
                         <button
                           onClick={handleSaveEdit}
-                          className="bg-green-500 hover:bg-green-600 text-white px-6 py-2 text-xs font-medium tracking-wide uppercase transition-colors"
+                          className="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded-lg text-sm font-semibold transition-colors"
                         >
                           Save
                         </button>
                         <button
                           onClick={handleCancelEdit}
-                          className="border border-gray-200 hover:border-gray-300 text-gray-600 px-6 py-2 text-xs font-medium tracking-wide uppercase transition-colors"
+                          className="bg-white hover:bg-gray-50 border border-gray-200 hover:border-gray-300 text-gray-700 px-4 py-2 rounded-lg text-sm font-semibold transition-colors"
                         >
                           Cancel
                         </button>
@@ -184,22 +185,22 @@ export const ActionItemsList: React.FC<ActionItemsListProps> = ({
                     </div>
                   ) : (
                     <>
-                      <p className={`text-black leading-relaxed text-sm ${item.completed ? 'line-through opacity-60' : ''}`}>
+                      <p className={`text-gray-900 leading-relaxed ${item.completed ? 'line-through opacity-60' : ''}`}>
                         {item.text}
                       </p>
-                      <div className="flex items-center space-x-4 mt-2">
-                        <span className={`inline-flex items-center px-2 py-1 text-xs font-medium tracking-wide uppercase ${getPriorityColor(item.priority)}`}>
+                      <div className="flex items-center space-x-3 mt-3">
+                        <span className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold ${getPriorityColor(item.priority)}`}>
                           <AlertCircle className="h-3 w-3 mr-1" />
-                          {item.priority}
+                          {item.priority.charAt(0).toUpperCase() + item.priority.slice(1)}
                         </span>
                         {item.assignee && (
-                          <span className="inline-flex items-center text-xs text-gray-400">
+                          <span className="inline-flex items-center text-xs text-gray-500 bg-gray-100 px-2 py-1 rounded-full">
                             <User className="h-3 w-3 mr-1" />
                             {item.assignee}
                           </span>
                         )}
                         {item.dueDate && (
-                          <span className="inline-flex items-center text-xs text-gray-400">
+                          <span className="inline-flex items-center text-xs text-gray-500 bg-gray-100 px-2 py-1 rounded-full">
                             <Clock className="h-3 w-3 mr-1" />
                             {item.dueDate.toLocaleDateString()}
                           </span>
@@ -209,18 +210,18 @@ export const ActionItemsList: React.FC<ActionItemsListProps> = ({
                   )}
                 </div>
 
-                <div className="flex items-center space-x-1">
+                <div className="flex items-center space-x-2">
                   <button
                     onClick={() => handleEdit(item)}
-                    className="p-3 hover:bg-gray-100 transition-colors"
+                    className="p-2 hover:bg-gray-200 rounded-lg transition-colors"
                   >
-                    <Edit2 className="h-3.5 w-3.5 text-gray-400" />
+                    <Edit2 className="h-4 w-4 text-gray-500" />
                   </button>
                   <button
                     onClick={() => onDeleteItem(item.id)}
-                    className="p-3 hover:bg-red-50 transition-colors"
+                    className="p-2 hover:bg-red-100 rounded-lg transition-colors"
                   >
-                    <X className="h-3.5 w-3.5 text-red-400" />
+                    <X className="h-4 w-4 text-red-500" />
                   </button>
                 </div>
               </div>
@@ -229,10 +230,13 @@ export const ActionItemsList: React.FC<ActionItemsListProps> = ({
 
           {actionItems.length === 0 && (
             <div className="text-center py-16">
-              <div className="w-12 h-12 bg-gray-50 flex items-center justify-center mx-auto mb-6">
-                <CheckCircle className="h-6 w-6 text-gray-300" />
+              <div className="w-16 h-16 bg-gradient-to-br from-purple-100 to-pink-100 rounded-2xl flex items-center justify-center mx-auto mb-6">
+                <Zap className="h-8 w-8 text-purple-400" />
               </div>
-              <p className="text-gray-400 font-light text-sm tracking-wide max-w-xs mx-auto">No action items yet. They'll appear here as you speak or add them manually.</p>
+              <h4 className="text-lg font-semibold text-gray-900 mb-2">No action items yet</h4>
+              <p className="text-gray-500 max-w-xs mx-auto">
+                Action items will automatically appear here as you speak, or you can add them manually.
+              </p>
             </div>
           )}
         </div>

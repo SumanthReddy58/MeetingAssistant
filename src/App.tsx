@@ -213,7 +213,7 @@ function App() {
   }
 
   return (
-    <div className="min-h-screen bg-white">
+    <div className="min-h-screen bg-gray-50">
       <Header
         currentSession={currentSession}
         onNewSession={handleStartSession}
@@ -221,9 +221,9 @@ function App() {
         onLogout={handleLogout}
       />
       
-      <div className="max-w-7xl mx-auto px-12 py-16">
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-16">
-          <div className="lg:col-span-2 space-y-12">
+      <div className="max-w-7xl mx-auto px-8 py-12">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+          <div className="lg:col-span-2 space-y-8">
             <SessionControl
               session={currentSession}
               isRecording={isListening}
@@ -240,7 +240,7 @@ function App() {
             />
           </div>
           
-          <div className="space-y-12">
+          <div className="space-y-8">
             <ActionItemsList
               actionItems={currentSession?.actionItems || []}
               onUpdateItem={handleUpdateActionItem}
