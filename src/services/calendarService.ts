@@ -93,19 +93,13 @@ export class CalendarService {
 
       const createdEvent = await response.json();
       
-      toast.success('✅ Meeting created in your calendar', {
-        duration: 3000,
-        position: 'top-right',
-      });
+      // Don't show toast here - let the calling component handle it
       
       return createdEvent.id;
     } catch (error) {
       console.error('Error creating calendar event with options:', error);
-      toast.error('❌ Calendar sync failed', {
-        duration: 4000,
-        position: 'top-right',
-      });
-      return null;
+      // Don't show toast here - let the calling component handle it
+      throw error; // Re-throw to let caller handle
     }
   }
 
