@@ -235,6 +235,20 @@ export const formatParsedDateTime = (date: Date): string => {
   return `${date.toLocaleDateString()} at ${timeString}`;
 };
 
+// Helper function to format parsed date for display
+export const formatParsedDateTime = (date: Date): string => {
+  const now = new Date();
+  const isToday = date.toDateString() === now.toDateString();
+  const isTomorrow = date.toDateString() === new Date(now.getTime() + 24 * 60 * 60 * 1000).toDateString();
+  
+  const timeString = date.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' });
+  
+  if (isToday) return `Today at ${timeString}`;
+  if (isTomorrow) return `Tomorrow at ${timeString}`;
+  
+  return `${date.toLocaleDateString()} at ${timeString}`;
+};
+
 // Test function for development
 export const testNLPParser = (text: string): void => {
   console.log(`Testing: "${text}"`);

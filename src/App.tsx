@@ -11,6 +11,7 @@ import { CalendarService } from './services/calendarService';
 import { SlackService } from './services/slackService';
 import { GoogleCalendarIntegration } from './components/GoogleCalendarIntegration';
 import { SlackIntegration } from './components/SlackIntegration';
+import { MeetingPromptAfterTranscription } from './components/MeetingPromptAfterTranscription';
 import { MeetingSession, ActionItem, TranscriptSegment } from './types';
 import { extractActionItems } from './utils/actionItemExtractor';
 import { Toaster } from 'react-hot-toast';
@@ -32,6 +33,8 @@ function App() {
   const [isCalendarConnected, setIsCalendarConnected] = useState(false);
   const [calendarAccessToken, setCalendarAccessToken] = useState<string | null>(null);
   const [slackService, setSlackService] = useState<SlackService | null>(null);
+  const [showTranscriptionPrompt, setShowTranscriptionPrompt] = useState(false);
+  const [pendingTranscriptionTask, setPendingTranscriptionTask] = useState<ActionItem | null>(null);
   
   const { isListening, transcript, interimTranscript, isSupported, startListening, stopListening, resetTranscript } = useVoiceRecognition();
 
@@ -65,11 +68,20 @@ function App() {
           scheduledTime: item.scheduledTime
         }));
 
-        setCurrentSession(prev => prev ? {
-          ...prev,
-          transcript: [...prev.transcript, newSegment],
-          actionItems: [...prev.actionItems, ...newActionItems]
-        } : null);
+        // Update session with transcript and action items
+        const updatedSession = {
+          ...currentSession,
+          transcript: [...currentSession.transcript, newSegment],
+          actionItems: [...currentSession.actionItems, ...newActionItems]
+        };
+        
+        setCurrentSession(updatedSession);
+        
+        // Show meeting prompt for the first new action item if calendar is connected
+        if (isCalendarConnected && calendarAccessToken && newActionItems.length > 0) {
+          setPendingTranscriptionTask(newActionItems[0]);
+          setShowTranscriptionPrompt(true);
+        }
       } else {
         setCurrentSession(prev => prev ? {
           ...prev,
@@ -243,6 +255,30 @@ function App() {
     setSlackService(service);
   };
 
+  const handleTranscriptionMeetingCreate = (eventId: string) => {
+    if (pendingTranscriptionTask && currentSession) {
+      // Update the task with calendar event ID
+      const updatedActionItems = currentSession.actionItems.map(item =>
+        item.id === pendingTranscriptionTask.id 
+          ? { ...item, calendarEventId: eventId }
+          : item
+      );
+      
+      setCurrentSession({
+        ...currentSession,
+        actionItems: updatedActionItems
+      });
+    }
+    
+    setPendingTranscriptionTask(null);
+    setShowTranscriptionPrompt(false);
+  };
+
+  const handleTranscriptionPromptClose = () => {
+    setPendingTranscriptionTask(null);
+    setShowTranscriptionPrompt(false);
+  };
+
   const handleLogin = () => {
     setIsLoggedIn(true);
   };
@@ -341,6 +377,17 @@ function App() {
             </div>
           </div>
         </div>
+        
+        {/* Meeting Prompt After Transcription */}
+        {pendingTranscriptionTask && (
+          <MeetingPromptAfterTranscription
+            task={pendingTranscriptionTask}
+            isOpen={showTranscriptionPrompt}
+            onClose={handleTranscriptionPromptClose}
+            onCreateMeeting={handleTranscriptionMeetingCreate}
+            accessToken={calendarAccessToken}
+          />
+        )}
       </div>
     </>
   );
