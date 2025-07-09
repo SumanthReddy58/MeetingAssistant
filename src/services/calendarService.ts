@@ -1,6 +1,12 @@
 import { ActionItem } from '../types';
 import toast from 'react-hot-toast';
 
+export interface MeetingOptions {
+  duration?: number;
+  attendees?: string[];
+  reminderMinutes?: number;
+}
+
 export interface CalendarEvent {
   id?: string;
   summary: string;
@@ -59,6 +65,42 @@ export class CalendarService {
       return createdEvent.id;
     } catch (error) {
       console.error('Error creating calendar event:', error);
+      toast.error('❌ Calendar sync failed', {
+        duration: 4000,
+        position: 'top-right',
+      });
+      return null;
+    }
+  }
+
+  async createEventWithOptions(actionItem: ActionItem, options: MeetingOptions): Promise<string | null> {
+    try {
+      const event = this.createEventFromActionItemWithOptions(actionItem, options);
+      
+      const response = await fetch(`${this.baseUrl}/calendars/primary/events`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${this.accessToken}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(event),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(`Calendar API error: ${errorData.error?.message || response.statusText}`);
+      }
+
+      const createdEvent = await response.json();
+      
+      toast.success('✅ Meeting created in your calendar', {
+        duration: 3000,
+        position: 'top-right',
+      });
+      
+      return createdEvent.id;
+    } catch (error) {
+      console.error('Error creating calendar event with options:', error);
       toast.error('❌ Calendar sync failed', {
         duration: 4000,
         position: 'top-right',
@@ -181,6 +223,54 @@ export class CalendarService {
     };
   }
 
+  private createEventFromActionItemWithOptions(actionItem: ActionItem, options: MeetingOptions): CalendarEvent {
+    const now = new Date();
+    const startTime = actionItem.scheduledTime || actionItem.dueDate || new Date(now.getTime() + 24 * 60 * 60 * 1000);
+    const duration = options.duration || 30;
+    const endTime = new Date(startTime.getTime() + duration * 60 * 1000);
+    const timeZone = Intl.DateTimeFormat().resolvedOptions().timeZone;
+
+    const event: CalendarEvent = {
+      summary: actionItem.text,
+      description: this.createEventDescriptionWithOptions(actionItem, options),
+      start: {
+        dateTime: startTime.toISOString(),
+        timeZone,
+      },
+      end: {
+        dateTime: endTime.toISOString(),
+        timeZone,
+      },
+      colorId: this.getPriorityColorId(actionItem.priority),
+    };
+
+    // Add attendees if provided
+    if (options.attendees && options.attendees.length > 0) {
+      (event as any).attendees = options.attendees.map(email => ({ email }));
+    }
+
+    // Add reminders if specified
+    if (options.reminderMinutes !== undefined) {
+      event.reminders = {
+        useDefault: false,
+        overrides: [
+          { method: 'email', minutes: 24 * 60 }, // 24 hours before
+          { method: 'popup', minutes: options.reminderMinutes },
+        ],
+      };
+    } else {
+      event.reminders = {
+        useDefault: false,
+        overrides: [
+          { method: 'email', minutes: 24 * 60 },
+          { method: 'popup', minutes: 30 },
+        ],
+      };
+    }
+
+    return event;
+  }
+
   private createEventDescription(actionItem: ActionItem): string {
     const parts = [
       '📌 Action Item from Meeting Assistant',
@@ -197,6 +287,32 @@ export class CalendarService {
     }
 
     parts.push('', `Created: ${actionItem.createdAt.toLocaleString()}`);
+
+    return parts.join('\n');
+  }
+
+  private createEventDescriptionWithOptions(actionItem: ActionItem, options: MeetingOptions): string {
+    const parts = [
+      '📌 Action Item Meeting - Meeting Assistant',
+      '',
+      `Task: ${actionItem.text}`,
+      `Priority: ${actionItem.priority.toUpperCase()}`,
+    ];
+
+    if (actionItem.assignee) {
+      parts.push(`Assigned to: ${actionItem.assignee}`);
+    }
+
+    if (actionItem.dueDate) {
+      parts.push(`Due Date: ${actionItem.dueDate.toLocaleDateString()}`);
+    }
+
+    if (options.attendees && options.attendees.length > 0) {
+      parts.push(`Attendees: ${options.attendees.join(', ')}`);
+    }
+
+    parts.push('', `Duration: ${options.duration || 30} minutes`);
+    parts.push(`Created: ${actionItem.createdAt.toLocaleString()}`);
 
     return parts.join('\n');
   }

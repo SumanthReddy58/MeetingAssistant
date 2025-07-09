@@ -2,19 +2,24 @@ import React, { useState } from 'react';
 import { Check, X, Edit2, Plus, AlertCircle, Clock, User, Calendar, CheckCircle, Target, Zap } from 'lucide-react';
 import { ActionItem } from '../types';
 import { formatTimeForDisplay } from '../utils/timeExtractor';
+import { CalendarSyncPrompt } from './CalendarSyncPrompt';
 
 interface ActionItemsListProps {
   actionItems: ActionItem[];
   onUpdateItem: (id: string, updates: Partial<ActionItem>) => void;
   onDeleteItem: (id: string) => void;
   onAddItem: (item: Partial<ActionItem>) => void;
+  isCalendarConnected?: boolean;
+  calendarAccessToken?: string | null;
 }
 
 export const ActionItemsList: React.FC<ActionItemsListProps> = ({
   actionItems,
   onUpdateItem,
   onDeleteItem,
-  onAddItem
+  onAddItem,
+  isCalendarConnected = false,
+  calendarAccessToken = null
 }) => {
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editText, setEditText] = useState('');
@@ -22,6 +27,8 @@ export const ActionItemsList: React.FC<ActionItemsListProps> = ({
   const [newItemText, setNewItemText] = useState('');
   const [newItemPriority, setNewItemPriority] = useState<'low' | 'medium' | 'high'>('medium');
   const [newItemAssignee, setNewItemAssignee] = useState('');
+  const [showCalendarPrompt, setShowCalendarPrompt] = useState(false);
+  const [pendingTask, setPendingTask] = useState<ActionItem | null>(null);
 
   const handleEdit = (item: ActionItem) => {
     setEditingId(item.id);
@@ -43,18 +50,52 @@ export const ActionItemsList: React.FC<ActionItemsListProps> = ({
 
   const handleAddItem = () => {
     if (newItemText.trim()) {
-      onAddItem({
+      const newTask: Partial<ActionItem> = {
         text: newItemText,
         priority: newItemPriority,
         assignee: newItemAssignee || undefined,
         completed: false,
         createdAt: new Date()
-      });
+      };
+
+      // If calendar is connected, show sync prompt
+      if (isCalendarConnected && calendarAccessToken) {
+        const fullTask: ActionItem = {
+          id: Date.now().toString() + Math.random().toString(36).substr(2, 9),
+          ...newTask,
+          text: newTask.text || '',
+          priority: newTask.priority || 'medium',
+          completed: false,
+          createdAt: new Date()
+        };
+        setPendingTask(fullTask);
+        setShowCalendarPrompt(true);
+      } else {
+        // Add directly without calendar sync
+        onAddItem(newTask);
+      }
+
       setNewItemText('');
       setNewItemAssignee('');
       setNewItemPriority('medium');
       setShowAddForm(false);
     }
+  };
+
+  const handleCalendarSync = (eventId: string) => {
+    if (pendingTask) {
+      const taskWithCalendar = { ...pendingTask, calendarEventId: eventId };
+      onAddItem(taskWithCalendar);
+      setPendingTask(null);
+    }
+  };
+
+  const handleCalendarPromptClose = () => {
+    if (pendingTask) {
+      onAddItem(pendingTask);
+      setPendingTask(null);
+    }
+    setShowCalendarPrompt(false);
   };
 
   const getPriorityColor = (priority: string) => {
@@ -241,6 +282,17 @@ export const ActionItemsList: React.FC<ActionItemsListProps> = ({
           )}
         </div>
       </div>
+
+      {/* Calendar Sync Prompt */}
+      {pendingTask && (
+        <CalendarSyncPrompt
+          task={pendingTask}
+          isOpen={showCalendarPrompt}
+          onClose={handleCalendarPromptClose}
+          onSync={handleCalendarSync}
+          accessToken={calendarAccessToken}
+        />
+      )}
     </div>
   );
 };
