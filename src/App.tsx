@@ -7,6 +7,8 @@ import { ActionItemsList } from './components/ActionItemsList';
 import { SessionHistory } from './components/SessionHistory';
 import { useVoiceRecognition } from './hooks/useVoiceRecognition';
 import { useLocalStorage } from './hooks/useLocalStorage';
+import { GoogleCalendarService } from './services/googleCalendar';
+import { GoogleCalendarIntegration } from './components/GoogleCalendarIntegration';
 import { MeetingSession, ActionItem, TranscriptSegment } from './types';
 import { extractActionItems } from './utils/actionItemExtractor';
 
@@ -23,6 +25,8 @@ function App() {
   const [sessions, setSessions] = useLocalStorage<MeetingSession[]>('meeting-sessions', [], dateReviver);
   const [currentSession, setCurrentSession] = useState<MeetingSession | null>(null);
   const [showHistory, setShowHistory] = useState(false);
+  const [isCalendarConnected, setIsCalendarConnected] = useState(false);
+  const [calendarAccessToken, setCalendarAccessToken] = useState<string | null>(null);
   
   const { isListening, transcript, interimTranscript, isSupported, startListening, stopListening, resetTranscript } = useVoiceRecognition();
 
@@ -141,6 +145,15 @@ function App() {
 
   const handleUpdateActionItem = (id: string, updates: Partial<ActionItem>) => {
     if (currentSession) {
+      const item = currentSession.actionItems.find(item => item.id === id);
+      
+      // Update calendar event if connected and item has calendar event
+      if (isCalendarConnected && calendarAccessToken && item?.calendarEventId) {
+        const calendarService = new GoogleCalendarService(calendarAccessToken);
+        const updatedItem = { ...item, ...updates };
+        calendarService.updateEvent(item.calendarEventId, updatedItem);
+      }
+      
       setCurrentSession({
         ...currentSession,
         actionItems: currentSession.actionItems.map(item =>
@@ -152,6 +165,14 @@ function App() {
 
   const handleDeleteActionItem = (id: string) => {
     if (currentSession) {
+      const item = currentSession.actionItems.find(item => item.id === id);
+      
+      // Delete calendar event if connected and item has calendar event
+      if (isCalendarConnected && calendarAccessToken && item?.calendarEventId) {
+        const calendarService = new GoogleCalendarService(calendarAccessToken);
+        calendarService.deleteEvent(item.calendarEventId);
+      }
+      
       setCurrentSession({
         ...currentSession,
         actionItems: currentSession.actionItems.filter(item => item.id !== id)
@@ -172,16 +193,35 @@ function App() {
         scheduledTime: item.scheduledTime
       };
 
-      setCurrentSession({
-        ...currentSession,
-        actionItems: [...currentSession.actionItems, newItem]
-      });
+      // Create calendar event if connected and item has scheduled time
+      if (isCalendarConnected && calendarAccessToken && (newItem.scheduledTime || newItem.dueDate)) {
+        const calendarService = new GoogleCalendarService(calendarAccessToken);
+        calendarService.createEvent(newItem).then(eventId => {
+          if (eventId) {
+            newItem.calendarEventId = eventId;
+            setCurrentSession(prev => prev ? {
+              ...prev,
+              actionItems: [...prev.actionItems, newItem]
+            } : null);
+          }
+        });
+      } else {
+        setCurrentSession({
+          ...currentSession,
+          actionItems: [...currentSession.actionItems, newItem]
+        });
+      }
     }
   };
 
   const handleSessionSelect = (session: MeetingSession) => {
     setCurrentSession(session);
     setShowHistory(false);
+  };
+
+  const handleCalendarIntegrationChange = (isConnected: boolean, accessToken: string | null) => {
+    setIsCalendarConnected(isConnected);
+    setCalendarAccessToken(accessToken);
   };
 
   const handleLogin = () => {
@@ -246,6 +286,10 @@ function App() {
               onUpdateItem={handleUpdateActionItem}
               onDeleteItem={handleDeleteActionItem}
               onAddItem={handleAddActionItem}
+            />
+            
+            <GoogleCalendarIntegration
+              onIntegrationChange={handleCalendarIntegrationChange}
             />
             
             <SessionHistory

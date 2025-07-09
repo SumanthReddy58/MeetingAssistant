@@ -64,6 +64,8 @@ The desktop version provides:
 
 ### Google Calendar Setup
 
+To enable automatic calendar event creation for action items:
+
 1. **Create a Google Cloud Project**:
    - Visit [Google Cloud Console](https://console.cloud.google.com/)
    - Create a new project or select existing
@@ -82,8 +84,14 @@ The desktop version provides:
 
 4. **Configure Environment**:
    - Copy your Client ID
-   - Create a `.env` file from `.env.example`
+   - Create a `.env.local` file from `.env.example`
    - Set `VITE_GOOGLE_CLIENT_ID` to your Client ID
+
+5. **Features Enabled**:
+   - Automatic calendar event creation for action items
+   - Priority-based color coding
+   - Email and popup reminders
+   - Sync with existing Google Calendar
 
 ### Deployment
 
