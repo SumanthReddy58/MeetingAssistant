@@ -7,10 +7,13 @@ import { ActionItemsList } from './components/ActionItemsList';
 import { SessionHistory } from './components/SessionHistory';
 import { useVoiceRecognition } from './hooks/useVoiceRecognition';
 import { useLocalStorage } from './hooks/useLocalStorage';
-import { GoogleCalendarService } from './services/googleCalendar';
+import { CalendarService } from './services/calendarService';
+import { SlackService } from './services/slackService';
 import { GoogleCalendarIntegration } from './components/GoogleCalendarIntegration';
+import { SlackIntegration } from './components/SlackIntegration';
 import { MeetingSession, ActionItem, TranscriptSegment } from './types';
 import { extractActionItems } from './utils/actionItemExtractor';
+import { Toaster } from 'react-hot-toast';
 
 // Date reviver function to convert ISO date strings back to Date objects
 const dateReviver = (key: string, value: any) => {
@@ -27,6 +30,7 @@ function App() {
   const [showHistory, setShowHistory] = useState(false);
   const [isCalendarConnected, setIsCalendarConnected] = useState(false);
   const [calendarAccessToken, setCalendarAccessToken] = useState<string | null>(null);
+  const [slackService, setSlackService] = useState<SlackService | null>(null);
   
   const { isListening, transcript, interimTranscript, isSupported, startListening, stopListening, resetTranscript } = useVoiceRecognition();
 
@@ -149,9 +153,18 @@ function App() {
       
       // Update calendar event if connected and item has calendar event
       if (isCalendarConnected && calendarAccessToken && item?.calendarEventId) {
-        const calendarService = new GoogleCalendarService(calendarAccessToken);
+        const calendarService = new CalendarService(calendarAccessToken);
         const updatedItem = { ...item, ...updates };
         calendarService.updateEvent(item.calendarEventId, updatedItem);
+      }
+
+      // Post to Slack if connected and task is being completed
+      if (slackService && updates.completed === true && !item?.completed) {
+        const updatedItem = { ...item, ...updates } as ActionItem;
+        slackService.postTaskUpdate(updatedItem, 'completed');
+      } else if (slackService && updates.completed === false && item?.completed) {
+        const updatedItem = { ...item, ...updates } as ActionItem;
+        slackService.postTaskUpdate(updatedItem, 'updated');
       }
       
       setCurrentSession({
@@ -169,8 +182,13 @@ function App() {
       
       // Delete calendar event if connected and item has calendar event
       if (isCalendarConnected && calendarAccessToken && item?.calendarEventId) {
-        const calendarService = new GoogleCalendarService(calendarAccessToken);
+        const calendarService = new CalendarService(calendarAccessToken);
         calendarService.deleteEvent(item.calendarEventId);
+      }
+
+      // Post to Slack if connected
+      if (slackService && item) {
+        slackService.postTaskUpdate(item, 'deleted');
       }
       
       setCurrentSession({
@@ -195,23 +213,29 @@ function App() {
 
       // Create calendar event if connected and item has scheduled time
       if (isCalendarConnected && calendarAccessToken && (newItem.scheduledTime || newItem.dueDate)) {
-        const calendarService = new GoogleCalendarService(calendarAccessToken);
+        const calendarService = new CalendarService(calendarAccessToken);
         calendarService.createEvent(newItem).then(eventId => {
           if (eventId) {
             newItem.calendarEventId = eventId;
-            setCurrentSession(prev => prev ? {
-              ...prev,
-              actionItems: [...prev.actionItems, newItem]
-            } : null);
+            updateSessionWithNewItem(newItem);
           }
         });
       } else {
-        setCurrentSession({
-          ...currentSession,
-          actionItems: [...currentSession.actionItems, newItem]
-        });
+        updateSessionWithNewItem(newItem);
+      }
+
+      // Post to Slack if connected
+      if (slackService) {
+        slackService.postToSlack(newItem);
       }
     }
+  };
+
+  const updateSessionWithNewItem = (newItem: ActionItem) => {
+    setCurrentSession(prev => prev ? {
+      ...prev,
+      actionItems: [...prev.actionItems, newItem]
+    } : null);
   };
 
   const handleSessionSelect = (session: MeetingSession) => {
@@ -222,6 +246,10 @@ function App() {
   const handleCalendarIntegrationChange = (isConnected: boolean, accessToken: string | null) => {
     setIsCalendarConnected(isConnected);
     setCalendarAccessToken(accessToken);
+  };
+
+  const handleSlackServiceChange = (service: SlackService | null) => {
+    setSlackService(service);
   };
 
   const handleLogin = () => {
@@ -253,53 +281,60 @@ function App() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <Header
-        currentSession={currentSession}
-        onNewSession={handleStartSession}
-        onSettings={() => setShowHistory(!showHistory)}
-        onLogout={handleLogout}
-      />
-      
-      <div className="max-w-7xl mx-auto px-8 py-12">
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          <div className="lg:col-span-2 space-y-8">
-            <SessionControl
-              session={currentSession}
-              isRecording={isListening}
-              onStartSession={handleStartSession}
-              onPauseSession={handlePauseSession}
-              onStopSession={handleStopSession}
-              onToggleRecording={handleToggleRecording}
-            />
+    <>
+      <Toaster />
+      <div className="min-h-screen bg-gray-50">
+        <Header
+          currentSession={currentSession}
+          onNewSession={handleStartSession}
+          onSettings={() => setShowHistory(!showHistory)}
+          onLogout={handleLogout}
+        />
+        
+        <div className="max-w-7xl mx-auto px-8 py-12">
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+            <div className="lg:col-span-2 space-y-8">
+              <SessionControl
+                session={currentSession}
+                isRecording={isListening}
+                onStartSession={handleStartSession}
+                onPauseSession={handlePauseSession}
+                onStopSession={handleStopSession}
+                onToggleRecording={handleToggleRecording}
+              />
+              
+              <TranscriptDisplay
+                transcript={currentSession?.transcript || []}
+                liveTranscript={interimTranscript}
+                isRecording={isListening}
+              />
+            </div>
             
-            <TranscriptDisplay
-              transcript={currentSession?.transcript || []}
-              liveTranscript={interimTranscript}
-              isRecording={isListening}
-            />
-          </div>
-          
-          <div className="space-y-8">
-            <ActionItemsList
-              actionItems={currentSession?.actionItems || []}
-              onUpdateItem={handleUpdateActionItem}
-              onDeleteItem={handleDeleteActionItem}
-              onAddItem={handleAddActionItem}
-            />
-            
-            <GoogleCalendarIntegration
-              onIntegrationChange={handleCalendarIntegrationChange}
-            />
-            
-            <SessionHistory
-              sessions={sessions}
-              onSessionSelect={handleSessionSelect}
-            />
+            <div className="space-y-8">
+              <ActionItemsList
+                actionItems={currentSession?.actionItems || []}
+                onUpdateItem={handleUpdateActionItem}
+                onDeleteItem={handleDeleteActionItem}
+                onAddItem={handleAddActionItem}
+              />
+              
+              <GoogleCalendarIntegration
+                onIntegrationChange={handleCalendarIntegrationChange}
+              />
+              
+              <SlackIntegration
+                onSlackServiceChange={handleSlackServiceChange}
+              />
+              
+              <SessionHistory
+                sessions={sessions}
+                onSessionSelect={handleSessionSelect}
+              />
+            </div>
           </div>
         </div>
       </div>
-    </div>
+    </>
   );
 }
 
